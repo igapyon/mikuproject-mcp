@@ -12,19 +12,19 @@ the detailed design documents under `docs/`.
 mikuproject-mcp/
   contract/        shared MCP contract
   packages/node/   first TypeScript MCP server implementation
-  packages/java/   reserved for the later Java MCP server implementation
+  packages/java/   placeholder only
   runtime/         configured or bundled upstream runtime artifacts
   workplace/       local scratch files and optional upstream checkouts
 ```
 
-`contract/` is the shared MCP contract. It should stay explicit enough that a
-future Java MCP implementation can validate against it without reverse
-engineering the TypeScript server.
+`contract/` is the shared MCP contract. It should stay explicit enough that the
+MCP surface is not defined only by TypeScript implementation details.
 
 `packages/node/` is the current implementation and the reference implementation
 for the MCP adapter contract.
 
-`packages/java/` is reserved for a later Java MCP server implementation.
+`packages/java/` is a placeholder only. Do not implement a Java MCP server
+unless a concrete future distribution or runtime constraint justifies it.
 
 ## Runtime Artifacts
 
@@ -98,17 +98,17 @@ dependencies, but they did not prevent MCP connection or method execution.
 
 ## Implementation Order
 
-The Java MCP server is planned, but it is intentionally sequenced after the
-Node.js / TypeScript server.
+The Node.js / TypeScript server is the current MCP server implementation.
+`packages/java/` remains a placeholder. Java runtime artifacts may still be used
+by the Node adapter through `runtime/`, but Java is not currently a second MCP
+server implementation target.
 
-The release order is:
+The implementation order is:
 
 1. Build the Node.js / TypeScript local stdio MCP server.
 2. Release and operate the Node version.
 3. Confirm stable local stdio operation with real MCP clients and real project
    artifacts.
-4. Use the Node implementation and checked-in `contract/` files as the reference
-   for `packages/java/`.
 
 Stable Node operation means:
 
@@ -118,8 +118,8 @@ Stable Node operation means:
 - diagnostics and generated resource links are understandable
 - README and contract documents are sufficient for normal local use
 
-Until those conditions are met, Java MCP work should be limited to planning and
-contract review.
+Do not add a Java MCP server unless a later requirement makes a separate Java
+server necessary.
 
 ## Verification
 
