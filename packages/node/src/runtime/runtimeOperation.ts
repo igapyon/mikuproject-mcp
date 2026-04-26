@@ -45,6 +45,12 @@ export type RuntimeOperation =
       name: "ai_validate_patch";
       statePath: string;
       patchPath: string;
+    }
+  | {
+      name: "state_apply_patch";
+      statePath: string;
+      patchPath: string;
+      outputPath: string;
     };
 
 export type RuntimeCommand = {
@@ -106,6 +112,8 @@ export function buildRuntimeArgs(operation: RuntimeOperation): string[] {
     }
     case "ai_validate_patch":
       return ["ai", "validate-patch", "--state", operation.statePath, "--in", operation.patchPath];
+    case "state_apply_patch":
+      return ["state", "apply-patch", "--state", operation.statePath, "--in", operation.patchPath, "--out", operation.outputPath];
   }
 }
 

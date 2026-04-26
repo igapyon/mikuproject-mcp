@@ -325,4 +325,58 @@ export function registerMikuprojectTools(server: McpServer): void {
       });
     }
   );
+
+  server.registerTool(
+    "mikuproject.state_apply_patch",
+    {
+      title: "Apply mikuproject patch",
+      description: "Applies a mikuproject patch document to a workbook JSON state.",
+      inputSchema: {
+        statePath: z.string().min(1),
+        patchPath: z.string().min(1),
+        outputPath: z.string().min(1).optional()
+      },
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.state_apply_patch")
+      }
+    },
+    async ({ statePath, patchPath, outputPath }) => {
+      const workspace = resolveWorkspaceConfig();
+      ensureWorkspace(workspace);
+      const stateOutputPath = outputPath || `${workspace.root}/mikuproject/state/next-workbook.json`;
+      ensureParentDirectory(stateOutputPath);
+      const runtimeResult = await runRuntimeOperation({
+        name: "state_apply_patch",
+        statePath,
+        patchPath,
+        outputPath: stateOutputPath
+      });
+
+      return asTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.state_apply_patch",
+        diagnostics: runtimeResult.diagnostics,
+        input: {
+          statePath,
+          patchPath,
+          outputPath: stateOutputPath
+        },
+        workspace: {
+          root: workspace.root
+        },
+        artifacts: runtimeResult.ok
+          ? [
+              {
+                role: "workbook_state",
+                uri: "mikuproject://state/next",
+                path: stateOutputPath
+              }
+            ]
+          : undefined,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
 }

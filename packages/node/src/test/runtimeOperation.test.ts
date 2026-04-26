@@ -73,6 +73,15 @@ describe("runtime operation mapping", () => {
       }),
       ["ai", "validate-patch", "--state", "workbook.json", "--in", "patch.editjson"]
     );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "state_apply_patch",
+        statePath: "workbook.json",
+        patchPath: "patch.editjson",
+        outputPath: "next-workbook.json"
+      }),
+      ["state", "apply-patch", "--state", "workbook.json", "--in", "patch.editjson", "--out", "next-workbook.json"]
+    );
   });
 
   it("prefers configured Java runtime over configured Node.js runtime", () => {
