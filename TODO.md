@@ -26,13 +26,13 @@ workspace policy, storage policy, and runtime adapter code.
   - [x] bundled runtime artifact directory: `runtime/`
   - [x] local workspace directory: `workplace/`
   - [x] first transport: local stdio only
-  - [x] first tools: `mikuproject.ai_spec`, `mikuproject.detect_kind`,
+  - [x] first tools: `mikuproject.ai_spec`, `mikuproject.ai_detect_kind`,
         `mikuproject.state_from_draft`
 - [x] Confirm the current official MCP TypeScript SDK package and Node.js engine
       requirements before installing dependencies.
-- [ ] Confirm available upstream runtime artifacts:
-  - [ ] `runtime/mikuproject-java/mikuproject.jar`
-  - [ ] `runtime/mikuproject-node/mikuproject.mjs`
+- [x] Confirm available upstream runtime artifacts:
+  - [x] `runtime/mikuproject-java/mikuproject.jar`
+  - [x] `runtime/mikuproject-node/mikuproject.mjs`
 - [x] Create the initial shared MCP contract before adding runtime-specific
       behavior.
 - [x] Create repository skeleton before implementing product behavior.
@@ -49,12 +49,12 @@ workspace policy, storage policy, and runtime adapter code.
   - [x] `contract/errors/`
 - [x] Add Node.js / TypeScript implementation layout under `packages/node/`.
 - [x] Add package/build metadata for the Node.js / TypeScript MCP server.
-- [ ] Add Node.js / TypeScript source layout for:
+- [x] Add Node.js / TypeScript source layout for:
   - [x] core tool definitions
-  - [ ] core input/result schema loading
+  - [x] core input/result schema loading
   - [x] runtime adapter interface
   - [x] local stdio entrypoint
-  - [ ] resource registry
+  - [x] resource registry
   - [x] workspace/storage helpers
 - [x] Reserve `packages/java/` for the later Java MCP server implementation.
 - [x] Add `runtime/` as the bundled runtime artifact directory.
@@ -71,32 +71,40 @@ workspace policy, storage policy, and runtime adapter code.
 
 ## Runtime Adapter
 
-- [ ] Define runtime discovery order:
+- [x] Create a Node.js / Java CLI mapping table before connecting MCP tools to
+      runtime execution.
+- [x] Derive MCP tool names from the canonical CLI command tree instead of
+      inventing shorter operation names.
+- [x] Limit core MCP tools to the CLI operation range supported by both Node.js
+      and Java runtime paths.
+- [x] Treat Java-only CLI operations as later optional capability-gated
+      extensions.
+- [x] Define runtime discovery order:
   - [x] explicit MCP server configuration
   - [x] bundled runtime artifacts under `runtime/`
-  - [ ] upstream public API / stable CLI
-  - [ ] MCP-local adapter helpers only where intended
-- [ ] Prefer Java runtime artifact when available.
-- [ ] Support Node.js CLI runtime fallback when Java is missing or lacks a needed
+  - [x] upstream public API / stable CLI
+  - [x] MCP-local adapter helpers only where intended
+- [x] Prefer Java runtime artifact when available.
+- [x] Support Node.js CLI runtime fallback when Java is missing or lacks a needed
       operation.
-- [ ] Call runtimes through fixed argument arrays, not shell command strings.
+- [x] Call runtimes through fixed argument arrays, not shell command strings.
 - [x] Return runtime capability and compatibility diagnostics in structured form.
-- [ ] Keep `workplace/upstream/` as reference input, not as the installed runtime
+- [x] Keep `workplace/upstream/` as reference input, not as the installed runtime
       surface.
-- [ ] Use `runtime/` rather than `vendor/` for bundled execution artifacts.
+- [x] Use `runtime/` rather than `vendor/` for bundled execution artifacts.
 
 ## MCP Tools MVP
 
 Implement product-prefixed tools with JSON Schema input and structured results.
 
-- [ ] `mikuproject.ai_spec`
-- [ ] `mikuproject.detect_kind`
-- [ ] `mikuproject.state_from_draft`
-- [ ] `mikuproject.project_overview`
-- [ ] `mikuproject.task_edit`
-- [ ] `mikuproject.phase_detail`
-- [ ] `mikuproject.validate_patch`
-- [ ] `mikuproject.apply_patch`
+- [x] `mikuproject.ai_spec`
+- [x] `mikuproject.ai_detect_kind`
+- [x] `mikuproject.state_from_draft`
+- [x] `mikuproject.ai_export_project_overview`
+- [x] `mikuproject.ai_export_task_edit`
+- [x] `mikuproject.ai_export_phase_detail`
+- [x] `mikuproject.ai_validate_patch`
+- [ ] `mikuproject.state_apply_patch`
 - [ ] `mikuproject.state_diff`
 - [ ] `mikuproject.state_summarize`
 - [ ] `mikuproject.export_workbook_json`
@@ -126,8 +134,8 @@ workflow is stable.
 
 ## MCP Resources
 
-- [ ] Define resource URI conventions.
-- [ ] Add resource support for AI-facing specifications.
+- [x] Define resource URI conventions.
+- [x] Add resource support for AI-facing specifications.
 - [ ] Add resource support for current workbook state.
 - [ ] Add resource support for saved workbook states.
 - [ ] Add resource support for operation summaries.
@@ -177,10 +185,10 @@ workflow is stable.
 
 ## Tests
 
-- [ ] Add smoke test for server startup.
-- [ ] Add smoke test for one read-only tool.
-- [ ] Add smoke test for one state-changing tool using temporary files.
-- [ ] Add tests for runtime discovery and fallback diagnostics.
+- [x] Add smoke test for server startup.
+- [x] Add smoke test for one read-only tool.
+- [x] Add smoke test for one state-changing tool using temporary files.
+- [x] Add tests for runtime discovery and fallback diagnostics.
 - [ ] Add tests for JSON Schema validation of tool inputs.
 - [ ] Add tests that generated artifacts preserve role-specific naming.
 

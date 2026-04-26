@@ -49,7 +49,7 @@ This document separates the following levels.
 - **Observed tendencies**: design habits visible in current miku repositories and MCP usage.
 - **Product-specific notes**: design decisions for specific MCP products, recorded as concrete examples.
 
-When a specification is unclear, first check whether the decision preserves upstream meaning and keeps the MCP surface stable for clients. MCP convenience is important, but it should not hide unsupported behavior, discard diagnostics, or make local and server deployments drift into different products.
+When a specification is unclear, first check whether the decision preserves upstream meaning and keeps the MCP surface stable for clients. For products with a documented CLI, look first to the CLI command tree as the source of truth before inventing MCP method names or operation groups. MCP convenience is important, but it should not hide unsupported behavior, discard diagnostics, or make local and server deployments drift into different products.
 
 ## MCP Specification Authority
 
@@ -203,6 +203,8 @@ MCP server versions emphasize the following philosophy.
 - Use upstream API or CLI before writing MCP-local conversion logic
 - Expose only product-specific operations that are useful to MCP clients
 - Keep tool names stable, explicit, and product-prefixed
+- Derive tool names from the upstream CLI command tree when a documented CLI
+  exists
 - Keep intermediate JSON internal when direct tool composition is possible
 - Return generated files as resources or resource links when practical
 - Preserve diagnostics and warnings as part of the result
@@ -216,7 +218,9 @@ The value of an MCP server version is not that it can answer a domain question c
 MCP servers use the following principles as defaults.
 
 - Use a `-mcp` suffix when the MCP server is a separate repository or package
-- Keep the product name in tool names, such as `mikuproject.apply_patch`
+- Keep the product name in tool names
+- When a documented CLI exists, derive MCP tool names from the canonical CLI
+  command tree
 - Use stdio transport as the first local implementation
 - Treat HTTP transport as an additional deployment form, not a separate product contract
 - Use Node.js or TypeScript when that is the simplest way to implement the MCP server
@@ -295,16 +299,36 @@ MCP tools are the main execution surface.
 
 Tool names should be product-prefixed and stable.
 
+When a product has a documented CLI, first treat the CLI command tree as the
+source of truth. MCP method names should be derived from that tree before any
+MCP-specific shortening, grouping, or convenience naming is considered.
+
+For products with a documented CLI, MCP tool names should preserve the CLI
+command tree. Use this form:
+
+```text
+<product>.<cli command tokens joined by "_">
+```
+
+Omit only the runtime launcher, such as `node mikuproject.mjs` or
+`java -jar mikuproject.jar`. Convert hyphenated CLI tokens to snake_case.
+
+The CLI command group is part of the operation name. Do not shorten
+`ai detect-kind` to `detect_kind`, `ai validate-patch` to `validate_patch`, or
+`state apply-patch` to `apply_patch` in the MCP surface. Shorter names hide the
+upstream command structure and make MCP, Node.js CLI, Java CLI, diagnostics,
+tests, and Agent Skills documentation harder to compare.
+
 Examples:
 
 - `mikuproject.ai_spec`
-- `mikuproject.detect_kind`
+- `mikuproject.ai_detect_kind`
 - `mikuproject.state_from_draft`
-- `mikuproject.project_overview`
-- `mikuproject.task_edit`
-- `mikuproject.phase_detail`
-- `mikuproject.validate_patch`
-- `mikuproject.apply_patch`
+- `mikuproject.ai_export_project_overview`
+- `mikuproject.ai_export_task_edit`
+- `mikuproject.ai_export_phase_detail`
+- `mikuproject.ai_validate_patch`
+- `mikuproject.state_apply_patch`
 - `mikuproject.state_diff`
 - `mikuproject.export_workbook_json`
 - `mikuproject.report_mermaid`
@@ -579,13 +603,13 @@ For a first miku MCP server, use this shape.
 For `mikuproject-mcp`, the MVP tools should be close to the Agent Skills MVP operation set.
 
 - `mikuproject.ai_spec`
-- `mikuproject.detect_kind`
+- `mikuproject.ai_detect_kind`
 - `mikuproject.state_from_draft`
-- `mikuproject.project_overview`
-- `mikuproject.task_edit`
-- `mikuproject.phase_detail`
-- `mikuproject.validate_patch`
-- `mikuproject.apply_patch`
+- `mikuproject.ai_export_project_overview`
+- `mikuproject.ai_export_task_edit`
+- `mikuproject.ai_export_phase_detail`
+- `mikuproject.ai_validate_patch`
+- `mikuproject.state_apply_patch`
 - `mikuproject.state_diff`
 - `mikuproject.state_summarize`
 - `mikuproject.export_workbook_json`
@@ -638,6 +662,8 @@ The preferred repository relationship is as follows.
 
 For development, `mikuproject-mcp` may use local upstream checkouts under `workplace/upstream/`.
 
+When cloning upstream repositories for local reference, clone them into the prescribed `workplace/upstream/` directory. Do not clone upstream repositories into the repository root, `runtime/`, `packages/`, or `contract/`.
+
 Recommended layout:
 
 ```text
@@ -663,6 +689,14 @@ mikuproject-mcp/
 `contract/` is the shared MCP contract for both implementations. `packages/node/` is the first TypeScript implementation and reference implementation. `packages/java/` is the later Java implementation and should preserve the shared contract.
 
 Files under `runtime/` are the configured or bundled execution artifacts used by the MCP server. Checkouts under `workplace/upstream/` are reference material and local development inputs. They should normally remain outside Git tracking except for placeholder files needed to keep the workspace directory shape.
+
+Use the following clone destinations:
+
+```text
+workplace/upstream/mikuproject/
+workplace/upstream/mikuproject-java/
+workplace/upstream/mikuproject-skills/
+```
 
 The upstream checkouts should be used to inspect and synchronize the following.
 
@@ -699,7 +733,18 @@ The first implementation should borrow heavily from `mikuproject-skills` design 
 - distinction between draft, patch, projection, workbook, report, and diagnostics artifacts
 - default local output discipline for state, report, and temporary files
 
-The first implementation should prefer local stdio transport. It should call `mikuproject.jar` or `mikuproject.mjs` through fixed runtime adapter code. It should keep the tool names aligned with the existing `mikuproject-skills` operation map and the Java / Node.js CLI correspondence.
+The first implementation should prefer local stdio transport. It should call
+`mikuproject.jar` or `mikuproject.mjs` through fixed runtime adapter code. It
+should keep the tool names aligned with the existing `mikuproject-skills`
+operation map and the Java / Node.js CLI correspondence.
+
+The CLI command tree is the naming source for MCP tools:
+
+- `ai spec` becomes `mikuproject.ai_spec`
+- `ai detect-kind` becomes `mikuproject.ai_detect_kind`
+- `state from-draft` becomes `mikuproject.state_from_draft`
+- `ai validate-patch` becomes `mikuproject.ai_validate_patch`
+- `state apply-patch` becomes `mikuproject.state_apply_patch`
 
 For `mikuproject-mcp`, the first MCP server implementation should be TypeScript unless a concrete product constraint says otherwise. The TypeScript version should establish the initial MCP contract for tools, schemas, result shapes, resources, diagnostics, and local workspace behavior. A later Java MCP server may be created after that contract stabilizes, but it should be a port of the MCP adapter contract rather than a redesign of the product operation vocabulary.
 

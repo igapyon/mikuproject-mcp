@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 export type WorkspaceConfig = {
   root: string;
@@ -19,4 +19,8 @@ export function isInsideWorkspace(path: string, config: WorkspaceConfig): boolea
   const resolvedPath = resolve(path);
   const resolvedRoot = resolve(config.root);
   return resolvedPath === resolvedRoot || resolvedPath.startsWith(`${resolvedRoot}/`);
+}
+
+export function ensureParentDirectory(path: string): void {
+  mkdirSync(dirname(resolve(path)), { recursive: true });
 }

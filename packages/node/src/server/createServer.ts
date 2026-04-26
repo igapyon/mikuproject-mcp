@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { registerMikuprojectResources } from "../resources/registerResources.js";
 import { registerMikuprojectTools } from "../tools/registerTools.js";
 
 export function createMikuprojectServer(): McpServer {
@@ -7,6 +8,7 @@ export function createMikuprojectServer(): McpServer {
     version: "0.0.0"
   });
 
+  registerMikuprojectResources(server);
   registerMikuprojectTools(server);
 
   return server;
