@@ -46,12 +46,14 @@ jobs:
         run: npm run test
 
       - name: Pack Node package
-        run: npm --workspace packages/node pack
+        run: |
+          mkdir -p release-assets
+          npm --workspace packages/node pack --pack-destination release-assets
 
       - name: Upload package tarball to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag_name || github.event.release.tag_name || github.ref_name }}
-          files: packages/node/*.tgz
+          files: release-assets/*.tgz
           draft: false
           prerelease: false
