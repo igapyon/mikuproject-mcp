@@ -13,9 +13,9 @@ This repository is currently a Node.js / TypeScript MCP server implementation.
 The Node package metadata is prepared for a future public package release, but
 the current validation path is still to build and run it from a local checkout.
 
-The Java MCP server is planned later, but only after the Node version has been
-released and has shown stable local stdio operation. Java-side work is currently
-limited to planning and contract review.
+`packages/java/` is kept only as a placeholder. There is no current plan to
+implement a Java MCP server unless a concrete distribution or runtime constraint
+requires it later.
 
 ## Requirements
 
