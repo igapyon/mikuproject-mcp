@@ -22,5 +22,6 @@ multiple artifacts are JSON files.
 | `ai_spec` | AI-facing product specification. | `mikuproject://spec/ai-json` |
 
 Tool results should preserve generated paths when the client may need local file
-access. Product resources should use `mikuproject://` URIs unless the client is
-expected to directly open a local file.
+access. Product resources should use `mikuproject://` URIs only when the server
+can read the named artifact through that URI. If a tool writes to a custom
+`outputPath`, return the path without a fixed product resource URI.

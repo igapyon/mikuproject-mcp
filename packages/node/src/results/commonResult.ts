@@ -8,7 +8,7 @@ export type Diagnostic = {
 
 export type ArtifactRef = {
   role: string;
-  uri: string;
+  uri?: string;
   path?: string;
 };
 

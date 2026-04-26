@@ -1,17 +1,38 @@
 {
   "name": "@igapyon/mikuproject-mcp-node",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Local stdio MCP server adapter for mikuproject.",
+  "private": false,
+  "license": "Apache-2.0",
   "type": "module",
   "bin": {
     "mikuproject-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "!dist/test/**",
+    "contract/**",
+    "runtime/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/igapyon/mikuproject-mcp.git",
+    "directory": "packages/node"
+  },
+  "homepage": "https://github.com/igapyon/mikuproject-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/igapyon/mikuproject-mcp/issues"
   },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "node --test dist/test/*.test.js",
+    "prepack": "npm run build && node scripts/prepare-package-assets.mjs",
+    "test": "node --test --test-concurrency=1 dist/test/*.test.js",
     "start": "node dist/index.js"
   },
   "dependencies": {

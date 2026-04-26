@@ -24,3 +24,8 @@ validate local stdio behavior. The Java MCP server should be created only after
 the Node implementation has been exercised and the shared tool, resource,
 prompt, schema, result, diagnostics, workspace, and artifact-role contracts are
 accepted as stable enough to port.
+
+The Java MCP server is also gated by release order. The Node implementation must
+be released and show stable local stdio operation before Java MCP implementation
+starts. Until then, Java-side work should be limited to reviewing this shared
+contract and planning how to preserve it.
