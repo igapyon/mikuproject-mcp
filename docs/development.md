@@ -23,8 +23,7 @@ MCP surface is not defined only by TypeScript implementation details.
 `packages/node/` is the current implementation and the reference implementation
 for the MCP adapter contract.
 
-`packages/java/` is a placeholder only. Do not implement a Java MCP server
-unless a concrete future distribution or runtime constraint justifies it.
+`packages/java/` is a placeholder only.
 
 ## Runtime Artifacts
 
@@ -33,16 +32,14 @@ Bundled or locally configured upstream runtime artifacts belong under
 
 ```text
 runtime/
-  mikuproject-java/mikuproject.jar
-  mikuproject-java/mikuproject-sources.jar
-  mikuproject-node/mikuproject.mjs
-  mikuproject-node/mikuproject-sources.tgz
+  product-runtime/
+    runnable-artifact
+    source-traceability-artifact
 ```
 
 Keep paired source artifacts under `runtime/` next to the executable artifact
-they describe. The MCP adapter executes only `mikuproject.jar` or
-`mikuproject.mjs`, but `*-sources.*` files are kept as traceability artifacts for
-the bundled upstream runtime.
+they describe. The MCP adapter executes only runnable artifacts, but source
+artifacts are kept as traceability artifacts for the bundled upstream runtime.
 
 `workplace/upstream/` may contain local upstream checkouts for development, but
 it is not the installed runtime surface.
@@ -51,7 +48,6 @@ Suggested upstream checkout layout:
 
 ```text
 workplace/upstream/mikuproject/
-workplace/upstream/mikuproject-java/
 workplace/upstream/mikuproject-skills/
 ```
 
@@ -99,9 +95,7 @@ dependencies, but they did not prevent MCP connection or method execution.
 ## Implementation Order
 
 The Node.js / TypeScript server is the current MCP server implementation.
-`packages/java/` remains a placeholder. Java runtime artifacts may still be used
-by the Node adapter through `runtime/`, but Java is not currently a second MCP
-server implementation target.
+`packages/java/` remains a placeholder.
 
 The implementation order is:
 
@@ -118,8 +112,8 @@ Stable Node operation means:
 - diagnostics and generated resource links are understandable
 - README and contract documents are sufficient for normal local use
 
-Do not add a Java MCP server unless a later requirement makes a separate Java
-server necessary.
+Do not add another MCP server implementation unless a later requirement makes it
+necessary.
 
 ## Verification
 

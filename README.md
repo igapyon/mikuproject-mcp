@@ -13,26 +13,14 @@ This repository is currently a Node.js / TypeScript MCP server implementation.
 The Node package metadata is prepared for a future public package release, but
 the current validation path is still to build and run it from a local checkout.
 
-`packages/java/` is kept only as a placeholder. There is no current plan to
-implement a Java MCP server unless a concrete distribution or runtime constraint
-requires it later.
-
 ## Requirements
 
 - Node.js 20 or later
 - npm
-- At least one `mikuproject` runtime artifact:
-  - `runtime/mikuproject-java/mikuproject.jar`
-  - `runtime/mikuproject-java/mikuproject-sources.jar`
-  - `runtime/mikuproject-node/mikuproject.mjs`
-  - `runtime/mikuproject-node/mikuproject-sources.tgz`
+- Bundled or configured `mikuproject` runtime artifacts
 
-When both runtime artifacts are available, the adapter prefers the Java runtime
-and can fall back to the Node.js runtime when needed.
-
-`*-sources.*` artifacts are paired traceability artifacts. They are not executed
-by the MCP adapter, but should be kept next to the runnable runtime artifact so
-that the bundled runtime can be traced back to the upstream source snapshot.
+The checked-in runtime artifacts under `runtime/` are used by the MCP adapter
+for local execution.
 
 ## Build
 
@@ -80,7 +68,6 @@ By default, runtime artifacts are resolved from `runtime/`.
 You can override them with environment variables:
 
 ```sh
-MIKUPROJECT_MCP_RUNTIME_JAVA=/path/to/mikuproject.jar
 MIKUPROJECT_MCP_RUNTIME_NODE=/path/to/mikuproject.mjs
 MIKUPROJECT_MCP_WORKSPACE=/path/to/workspace
 ```

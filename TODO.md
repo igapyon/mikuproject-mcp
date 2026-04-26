@@ -14,8 +14,7 @@ workspace policy, storage policy, and runtime adapter code.
       `mikuproject-skills` operation map.
 - [x] Avoid MCP-local reimplementation of upstream conversion logic.
 - [x] Keep the Node.js / TypeScript implementation as the MCP server.
-- [x] Keep `packages/java/` as a placeholder only unless a concrete future
-      distribution or runtime constraint requires a Java MCP server.
+- [x] Keep `packages/java/` as a placeholder only.
 
 ## Before Implementation
 
@@ -33,9 +32,7 @@ workspace policy, storage policy, and runtime adapter code.
         `mikuproject.state_from_draft`
 - [x] Confirm the current official MCP TypeScript SDK package and Node.js engine
       requirements before installing dependencies.
-- [x] Confirm available upstream runtime artifacts:
-  - [x] `runtime/mikuproject-java/mikuproject.jar`
-  - [x] `runtime/mikuproject-node/mikuproject.mjs`
+- [x] Confirm available upstream runtime artifacts under `runtime/`.
 - [x] Create the initial shared MCP contract before adding runtime-specific
       behavior.
 - [x] Create repository skeleton before implementing product behavior.
@@ -61,7 +58,7 @@ workspace policy, storage policy, and runtime adapter code.
   - [x] resource registry
   - [x] workspace/storage helpers
 - [x] Reserve `packages/java/` as a placeholder only.
-- [x] Do not implement a Java MCP server unless a concrete future constraint
+- [x] Do not implement a second MCP server unless a concrete future constraint
       justifies it.
 - [x] Add `runtime/` as the bundled runtime artifact directory.
 - [x] Add placeholder layout for:
@@ -72,27 +69,27 @@ workspace policy, storage policy, and runtime adapter code.
       placeholder files.
 - [x] Document optional local upstream checkout layout:
   - `workplace/upstream/mikuproject/`
-  - `workplace/upstream/mikuproject-java/`
   - `workplace/upstream/mikuproject-skills/`
 
 ## Runtime Adapter
 
-- [x] Create a Node.js / Java CLI mapping table before connecting MCP tools to
-      runtime execution.
+- [x] Create a runtime CLI mapping table before connecting MCP tools to runtime
+      execution.
 - [x] Derive MCP tool names from the canonical CLI command tree instead of
       inventing shorter operation names.
-- [x] Limit core MCP tools to the CLI operation range supported by both Node.js
-      and Java runtime paths.
-- [x] Treat Java-only CLI operations as later optional capability-gated
+- [x] Limit core MCP tools to the CLI operation range supported by the configured
+      runtime paths.
+- [x] Treat runtime-specific CLI operations as later optional capability-gated
       extensions.
 - [x] Define runtime discovery order:
   - [x] explicit MCP server configuration
   - [x] bundled runtime artifacts under `runtime/`
   - [x] upstream public API / stable CLI
   - [x] MCP-local adapter helpers only where intended
-- [x] Prefer Java runtime artifact when available.
-- [x] Support Node.js CLI runtime fallback when Java is missing or lacks a needed
-      operation.
+- [x] Resolve configured or bundled runtime artifacts before broad repository
+      search.
+- [x] Support fallback among available runtime artifacts when one is missing or
+      lacks a needed operation.
 - [x] Call runtimes through fixed argument arrays, not shell command strings.
 - [x] Return runtime capability and compatibility diagnostics in structured form.
 - [x] Keep `workplace/upstream/` as reference input, not as the installed runtime
@@ -124,15 +121,11 @@ workflow is stable.
   validate-patch, and apply-patch tool path is implemented in the Node MCP
   server.
 - `packages/java/` is a placeholder only. The Node.js / TypeScript server is the
-  current MCP server implementation. Java remains a runtime artifact path, not a
-  second MCP server implementation target.
+  current MCP server implementation.
 - Continue with schema validation tests, artifact role naming tests, and resource
   support for current/saved workbook state.
 - Runtime artifact policy is decided: keep paired `*-sources.*` traceability
   artifacts under `runtime/` next to the executable artifacts they describe.
-- Java `phase-detail` compatibility was updated upstream and the MCP adapter now
-  uses `--root-task-uid` plus the IPv4 JVM options from the Java upstream
-  `.mvn/jvm.config`.
 - Verification checkpoint command: `npm run build && npm run test`.
 
 ## Schemas and Results

@@ -27,9 +27,9 @@ What characterizes MCP server versions is not a new product separate from the up
 - Preserve diagnostics, warnings, and artifact roles in structured results
 
 For the current `mikuproject-mcp` repository, this means the MCP server is
-implemented in Node.js / TypeScript. Java remains a runtime artifact path through
-`runtime/mikuproject-java/`; `packages/java/` is a placeholder only, not a second
-MCP server implementation target.
+implemented in Node.js / TypeScript. Runtime artifacts live under `runtime/`;
+`packages/java/` is a placeholder only, not a second MCP server implementation
+target.
 
 ## Role of This Document
 
@@ -39,10 +39,6 @@ Use the shared design documents together as follows.
 
 - `docs/miku-soft-10-mainapp-design-v20260425.md`
   - describes the upstream product design and semantic center
-- `docs/miku-soft-20-javaapp-design-v20260425.md`
-  - describes Java runtime versions when they exist
-- `docs/miku-soft-30-straight-conversion-v20260425.md`
-  - describes how Java versions are created from upstream main applications
 - `docs/miku-soft-40-agentskills-design-v20260425.md`
   - describes how Agent Skills versions expose miku workflows to AI agents
 - `docs/miku-soft-50-mcp-design-v20260427.md`
@@ -93,12 +89,6 @@ Main applications:
 - `mikuproject`
 - `mikuscore`
 
-Java application versions:
-
-- `miku-indexgen-java`
-- `mikuproject-java`
-- `miku-xlsx2md-java`
-
 Agent Skills versions:
 
 - `mikuproject-skills`
@@ -111,9 +101,7 @@ MCP server versions:
 Projects with the `-mcp` suffix are positioned as MCP server adapters for original suffixless tools or their runtime artifacts.
 
 For `mikuproject-mcp`, the server implementation is Node.js / TypeScript.
-`packages/java/` is intentionally only a placeholder. The Java side supplies a
-runtime jar when useful, but does not define a Java MCP server for this
-repository.
+`packages/java/` is intentionally only a placeholder.
 
 This document focuses on MCP server versions. It does not define the Web UI conventions for upstream main applications, Java packaging conventions for Java application versions, or skill packaging conventions for Agent Skills repositories.
 
@@ -185,10 +173,10 @@ An MCP server usually exposes one or more of the following.
 - resource definitions for state, specifications, reports, and generated files
 - resource templates for session or workspace-scoped artifacts
 - prompt definitions for product-specific workflows
-- runtime adapters for Java CLI, Node.js CLI, or public APIs
+- runtime adapters for bundled CLI artifacts or public APIs
 - smoke tests for protocol startup and core tool calls
 
-The MCP server is not primarily the browser UI, not primarily a Java port, and not primarily an Agent Skill. For miku MCP repositories, Node.js / TypeScript is the normal MCP server implementation choice. The server can call Node.js, Java, or another runtime artifact if that is the natural way to execute the upstream product, but the MCP layer itself should remain thin.
+The MCP server is not primarily the browser UI, not primarily a runtime port, and not primarily an Agent Skill. For miku MCP repositories, Node.js / TypeScript is the normal MCP server implementation choice. The server can call bundled or configured runtime artifacts if that is the natural way to execute the upstream product, but the MCP layer itself should remain thin.
 
 The center of an MCP server is reliable protocol adaptation: receive a typed tool call, validate arguments, call the upstream runtime, preserve useful state, expose resulting artifacts as resources, and return diagnostics without hiding important constraints.
 
@@ -236,9 +224,7 @@ MCP servers use the following principles as defaults.
 - Treat HTTP transport as an additional deployment form, not a separate product contract
 - Use Node.js / TypeScript as the standard implementation choice for the MCP server
 - Prefer a single Node.js / TypeScript MCP server unless a concrete product constraint justifies another server implementation
-- Prefer bundled Java CLI and Node.js CLI runtime artifacts when local, reproducible execution needs them
-- Treat the Java CLI runtime artifact as a single jar
-- Treat the Node.js CLI runtime artifact as a single JavaScript file
+- Prefer bundled or configured runtime artifacts when local, reproducible execution needs them
 - Prefer upstream public APIs, stable global APIs, or documented CLI commands
 - Keep tool schemas and result schemas under version control
 - Keep repository-level README user-facing and developer details under `docs/`
@@ -256,7 +242,7 @@ Local stdio is appropriate when:
 
 - the user runs an MCP client on the same machine
 - the product reads and writes local files
-- the upstream runtime is available as a local jar, JavaScript file, or CLI command
+- the upstream runtime is available as a local executable artifact or CLI command
 - the workflow benefits from local-first processing and simple installation
 
 HTTP transport is appropriate when:
@@ -322,13 +308,13 @@ command tree. Use this form:
 ```
 
 Omit only the runtime launcher, such as `node mikuproject.mjs` or
-`java -jar mikuproject.jar`. Convert hyphenated CLI tokens to snake_case.
+another runtime command. Convert hyphenated CLI tokens to snake_case.
 
 The CLI command group is part of the operation name. Do not shorten
 `ai detect-kind` to `detect_kind`, `ai validate-patch` to `validate_patch`, or
 `state apply-patch` to `apply_patch` in the MCP surface. Shorter names hide the
-upstream command structure and make MCP, Node.js CLI, Java CLI, diagnostics,
-tests, and Agent Skills documentation harder to compare.
+upstream command structure and make MCP, CLI diagnostics, tests, and Agent
+Skills documentation harder to compare.
 
 Examples:
 
@@ -400,9 +386,10 @@ The preferred order is as follows.
 4. Use MCP-local helpers only when they are the intended adapter layer
 5. Search broadly for alternatives only when the declared runtime path is missing or unusable
 
-For products with both Java and Node.js runtime artifacts, the MCP server may prefer the Java CLI first for local execution. A single jar is easy to locate, smoke-test, and run in automation environments. If the Java CLI artifact is missing, cannot be invoked, or does not support the requested operation, the MCP server may fall back to the Node.js CLI runtime.
-
-This runtime preference is an execution policy, not a semantic priority. The upstream main application remains the semantic center. Runtime differences should be reported as capability or compatibility diagnostics.
+When multiple runtime artifacts are available, runtime selection is an execution
+policy, not a semantic priority. The upstream main application remains the
+semantic center. Runtime differences should be reported as capability or
+compatibility diagnostics.
 
 When an MCP repository bundles upstream runtime artifacts, `runtime/` is the preferred repository directory. The name reflects that these files are execution artifacts used by the MCP adapter, not general vendored source material. Use `vendor/` only when a repository intentionally vendors third-party source or dependency material.
 
@@ -410,19 +397,16 @@ Recommended runtime artifact layout:
 
 ```text
 runtime/
-  mikuproject-java/
-    mikuproject.jar
-    mikuproject-sources.jar
-  mikuproject-node/
-    mikuproject.mjs
-    mikuproject-sources.tgz
+  product-runtime/
+    runnable-artifact
+    source-traceability-artifact
 ```
 
 `runtime/` is the installed runtime surface for the MCP adapter. It should
-contain the runnable artifact and its paired `*-sources.*` traceability artifact
-for each bundled runtime. The MCP server executes only the runnable artifact, but
-the paired source artifact keeps the runtime bundle auditable without requiring
-the full upstream source checkout.
+contain runnable artifacts and, when available, paired source traceability
+artifacts. The MCP server executes only runnable artifacts, but source
+traceability artifacts can keep runtime bundles auditable without requiring the
+full upstream source checkout.
 
 The exact filenames may differ by product, but the artifact role should remain clear in directory names, package metadata, and diagnostics.
 
@@ -473,24 +457,18 @@ Variant-specific differences should be limited to:
 
 If a capability is not safe or practical in one deployment form, the server should report an explicit capability or policy error rather than silently changing behavior.
 
-## Implementation Language and Porting Principles
+## Implementation Language Principles
 
 MCP is a protocol, not a language-specific product shape. A miku MCP server may be implemented in TypeScript, Java, or another language when that language is appropriate for the repository and runtime environment.
 
-For a first implementation, TypeScript is usually preferred when it gives the shortest path to a correct local stdio MCP server, official SDK alignment, JSON Schema handling, package metadata, and smoke testing. This is especially natural for miku products whose upstream application or CLI artifacts already have Node.js / TypeScript lineage.
+For miku MCP repositories, Node.js / TypeScript is the standard choice because
+it gives a direct path to local stdio MCP servers, official SDK alignment, JSON
+Schema handling, package metadata, and smoke testing.
 
-If a Java MCP server is ever added after a TypeScript implementation, treat the TypeScript implementation as the initial reference implementation for the MCP contract. The Java version may differ in packaging, deployment, process management, and runtime integration, but it should preserve:
-
-- MCP tool names
-- tool input schemas
-- result shapes
-- resource URI conventions
-- prompt names and intent where prompts exist
-- artifact roles
-- diagnostics and error categories
-- workspace and storage policy at the protocol boundary
-
-Do not use Java porting as a reason to redesign the MCP surface. If the Java implementation needs a runtime-specific difference, document it as an implementation or compatibility note while keeping the protocol contract stable.
+Do not add a second MCP server implementation unless a concrete product,
+distribution, or runtime constraint requires it. If that happens, decide the
+language-specific porting rules at that time, using the checked-in MCP contract
+as the stable boundary.
 
 ## Recommended Repository Layout
 
@@ -513,8 +491,7 @@ mikuproject-mcp/
     java/
       .gitkeep
   runtime/
-    mikuproject-java/
-    mikuproject-node/
+    product-runtime/
   workplace/
 ```
 
@@ -527,7 +504,6 @@ The intended responsibilities are:
   - is usually the first implementation and initial reference implementation
 - `packages/java/`
   - placeholder only
-  - does not own a Java MCP server unless a concrete future distribution or runtime constraint justifies one
 - `runtime/`
   - stores configured or bundled upstream execution artifacts used by the MCP adapters
 - `workplace/`
@@ -539,11 +515,7 @@ The shared MCP contract should not live only as implicit TypeScript code. Keep t
 
 When multiple upstream runtime paths exist, the core MCP contract should be limited to operations that are available across the supported runtime paths needed for the product's normal fallback policy.
 
-For products with both Node.js and Java runtime paths, the core MCP tool set should normally be limited to operations supported by both runtimes. If the Java runtime supports a wider CLI surface than the Node.js runtime, the wider Java-only surface should not expand the core MCP contract unless equivalent Node.js support exists.
-
-This keeps the MCP server a product adapter rather than a Java-runtime-specific adapter. It also keeps fallback behavior explainable: when Java is unavailable or unsuitable, the Node.js runtime should still be able to support the declared core MCP tools.
-
-Java-only operations may be added later as optional, capability-gated extensions, but they should be clearly separated from the core MCP contract. Such operations should:
+Runtime-specific operations may be added later as optional, capability-gated extensions, but they should be clearly separated from the core MCP contract. Such operations should:
 
 - be documented as optional extensions
 - report unavailable capability clearly when the selected runtime does not support them
@@ -664,9 +636,6 @@ The preferred repository relationship is as follows.
 - `mikuproject`
   - owns the upstream product semantics
   - owns the canonical domain behavior, conversion policy, report policy, and AI-facing product contracts
-- `mikuproject-java`
-  - provides the Java runtime and jar-based execution path when used
-  - keeps Java CLI behavior aligned with the upstream product
 - `mikuproject-skills`
   - provides the Agent Skills workflow design reference
   - records operation maps, state-handling rules, file workflow rules, and agent-facing boundaries
@@ -694,16 +663,14 @@ mikuproject-mcp/
     node/
     java/
   runtime/
-    mikuproject-java/
-    mikuproject-node/
+    product-runtime/
   workplace/
     upstream/
       mikuproject/
-      mikuproject-java/
       mikuproject-skills/
 ```
 
-`contract/` is the shared MCP contract. `packages/node/` is the TypeScript implementation and reference implementation. `packages/java/` is a placeholder only; Java is currently used as a runtime artifact path, not as a second MCP server implementation.
+`contract/` is the shared MCP contract. `packages/node/` is the TypeScript implementation and reference implementation. `packages/java/` is a placeholder only.
 
 Files under `runtime/` are the configured or bundled execution artifacts used by the MCP server. Checkouts under `workplace/upstream/` are reference material and local development inputs. They should normally remain outside Git tracking except for placeholder files needed to keep the workspace directory shape.
 
@@ -711,7 +678,6 @@ Use the following clone destinations:
 
 ```text
 workplace/upstream/mikuproject/
-workplace/upstream/mikuproject-java/
 workplace/upstream/mikuproject-skills/
 ```
 
@@ -719,7 +685,6 @@ The upstream checkouts should be used to inspect and synchronize the following.
 
 - upstream `mikuproject` CLI contracts and AI-facing specifications
 - upstream `mikuproject` product behavior and artifact roles
-- `mikuproject-java` jar behavior and Java CLI parity
 - `mikuproject-skills` operation map and workflow boundary rules
 - runtime artifact generation and smoke-test expectations
 
@@ -730,9 +695,6 @@ The clean responsibility split is:
 ```text
 mikuproject
   -> upstream semantic owner
-
-mikuproject-java
-  -> Java runtime / jar provider
 
 mikuproject-skills
   -> Agent Skills workflow design reference
@@ -745,15 +707,14 @@ The first implementation should borrow heavily from `mikuproject-skills` design 
 
 - operation names and operation grouping
 - `mikuproject_workbook_json` as the practical state boundary
-- Java runtime preference with Node.js runtime fallback
 - distinction between structural workbook `XLSX` and `WBS XLSX` report output
 - distinction between draft, patch, projection, workbook, report, and diagnostics artifacts
 - default local output discipline for state, report, and temporary files
 
 The first implementation should prefer local stdio transport. It should call
-`mikuproject.jar` or `mikuproject.mjs` through fixed runtime adapter code. It
-should keep the tool names aligned with the existing `mikuproject-skills`
-operation map and the Java / Node.js CLI correspondence.
+runtime artifacts through fixed runtime adapter code. It should keep the tool
+names aligned with the existing `mikuproject-skills` operation map and upstream
+CLI correspondence.
 
 The CLI command tree is the naming source for MCP tools:
 
@@ -767,12 +728,8 @@ For `mikuproject-mcp`, the MCP server implementation is TypeScript. The
 TypeScript version establishes the MCP contract for tools, schemas, result
 shapes, resources, diagnostics, and local workspace behavior.
 
-`packages/java/` remains a placeholder only. A Java MCP server should not be
-implemented unless a concrete future distribution or runtime constraint requires
-maintaining a second MCP server implementation. Java remains important as a
-runtime artifact provider through `runtime/mikuproject-java/`, but that is
-separate from implementing the MCP protocol server in Java.
-
-If the `mikuproject-java` CLI supports a wider operation range than the Node.js `mikuproject` CLI, the first `mikuproject-mcp` core tool set should still stay within the operation range supported by the Node.js CLI and the Java CLI in common. Java-only operations should be treated as later optional, capability-gated extensions rather than as part of the first core MCP contract.
+`packages/java/` remains a placeholder only. Do not predesign another MCP server
+implementation in the current Node server documentation. If a concrete future
+requirement appears, handle that implementation design at that time.
 
 If `mikuproject-mcp` later adds an HTTP server, it should keep the same core tool names. The HTTP server should add session-scoped resources, upload handling, authentication, storage policy, and artifact lifecycle management rather than changing the product operation vocabulary.
