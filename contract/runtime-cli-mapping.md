@@ -42,6 +42,11 @@ Java CLI, tests, diagnostics, and Agent Skills documentation traceable.
 | `mikuproject.state_diff` | `node mikuproject.mjs state diff --before <before> --after <after> --diagnostics json` | `java -jar mikuproject.jar state diff --before <before> --after <after>` | yes |
 | `mikuproject.state_summarize` | `node mikuproject.mjs state summarize --in <workbook> --diagnostics json` | `java -jar mikuproject.jar state summarize --in <workbook>` | yes |
 | `mikuproject.export_workbook_json` | `node mikuproject.mjs export workbook-json --in <workbook> --out <workbook-json>` | `java -jar mikuproject.jar export workbook-json --in <workbook> --out <workbook-json>` | yes |
+| `mikuproject.export_xml` | `node mikuproject.mjs export xml --in <workbook> --out <project.xml>` | `java -jar mikuproject.jar export xml --in <workbook> --out <project.xml>` | yes |
+| `mikuproject.export_xlsx` | `node mikuproject.mjs export xlsx --in <workbook> --out <project.xlsx>` | `java -jar mikuproject.jar export xlsx --in <workbook> --out <project.xlsx>` | yes |
+| `mikuproject.import_xlsx` | `node mikuproject.mjs import xlsx --in <project.xlsx> --out <workbook>` | `java -jar mikuproject.jar import xlsx --in <project.xlsx> --out <workbook>` | yes |
+| `mikuproject.report_wbs_markdown` | `node mikuproject.mjs report wbs-markdown --in <workbook> --out <report.md>` | `java -jar mikuproject.jar report wbs-markdown --in <workbook> --out <report.md>` | yes |
+| `mikuproject.report_mermaid` | `node mikuproject.mjs report mermaid --in <workbook> --out <report.mmd>` | `java -jar mikuproject.jar report mermaid --in <workbook> --out <report.mmd>` | yes |
 
 ## Runtime Artifacts
 

@@ -82,6 +82,69 @@ describe("runtime operation mapping", () => {
       }),
       ["state", "apply-patch", "--state", "workbook.json", "--in", "patch.editjson", "--out", "next-workbook.json"]
     );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "state_diff",
+        beforePath: "workbook-before.json",
+        afterPath: "workbook-after.json"
+      }),
+      ["state", "diff", "--before", "workbook-before.json", "--after", "workbook-after.json"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "state_summarize",
+        workbookPath: "workbook.json"
+      }),
+      ["state", "summarize", "--in", "workbook.json"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "export_workbook_json",
+        workbookPath: "workbook.json",
+        outputPath: "workbook-export.json"
+      }),
+      ["export", "workbook-json", "--in", "workbook.json", "--out", "workbook-export.json"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "export_xml",
+        workbookPath: "workbook.json",
+        outputPath: "project.xml"
+      }),
+      ["export", "xml", "--in", "workbook.json", "--out", "project.xml"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "export_xlsx",
+        workbookPath: "workbook.json",
+        outputPath: "project.xlsx"
+      }),
+      ["export", "xlsx", "--in", "workbook.json", "--out", "project.xlsx"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "import_xlsx",
+        inputPath: "project.xlsx",
+        outputPath: "workbook.json"
+      }),
+      ["import", "xlsx", "--in", "project.xlsx", "--out", "workbook.json"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "report_wbs_markdown",
+        workbookPath: "workbook.json",
+        outputPath: "wbs.md"
+      }),
+      ["report", "wbs-markdown", "--in", "workbook.json", "--out", "wbs.md"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "report_mermaid",
+        workbookPath: "workbook.json",
+        outputPath: "project.mmd"
+      }),
+      ["report", "mermaid", "--in", "workbook.json", "--out", "project.mmd"]
+    );
   });
 
   it("prefers configured Java runtime over configured Node.js runtime", () => {

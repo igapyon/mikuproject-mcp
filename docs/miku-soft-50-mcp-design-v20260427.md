@@ -748,6 +748,14 @@ The CLI command tree is the naming source for MCP tools:
 
 For `mikuproject-mcp`, the first MCP server implementation should be TypeScript unless a concrete product constraint says otherwise. The TypeScript version should establish the initial MCP contract for tools, schemas, result shapes, resources, diagnostics, and local workspace behavior. A later Java MCP server may be created after that contract stabilizes, but it should be a port of the MCP adapter contract rather than a redesign of the product operation vocabulary.
 
+The implementation sequence is fixed as Node.js / TypeScript first, Java MCP
+server later. The Java MCP implementation should not be started in parallel with
+the MVP. First validate the Node MCP server in local stdio use, including tool
+calls, resource reads, prompts, generated artifacts, diagnostics, workspace
+storage, runtime fallback behavior, and artifact-role naming. After that
+validation produces an acceptable conclusion, use the Node MCP server and the
+checked-in `contract/` files as the reference for `packages/java/`.
+
 If the `mikuproject-java` CLI supports a wider operation range than the Node.js `mikuproject` CLI, the first `mikuproject-mcp` core tool set should still stay within the operation range supported by the Node.js CLI and the Java CLI in common. Java-only operations should be treated as later optional, capability-gated extensions rather than as part of the first core MCP contract.
 
 If `mikuproject-mcp` later adds an HTTP server, it should keep the same core tool names. The HTTP server should add session-scoped resources, upload handling, authentication, storage policy, and artifact lifecycle management rather than changing the product operation vocabulary.

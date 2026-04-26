@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { errorCategories } from "../results/errorCategories.js";
 import { resolveRuntimeConfig } from "./runtimeConfig.js";
 
 const execFileAsync = promisify(execFile);
@@ -50,6 +51,35 @@ export type RuntimeOperation =
       name: "state_apply_patch";
       statePath: string;
       patchPath: string;
+      outputPath: string;
+    }
+  | {
+      name: "state_diff";
+      beforePath: string;
+      afterPath: string;
+    }
+  | {
+      name: "state_summarize";
+      workbookPath: string;
+    }
+  | {
+      name: "export_workbook_json";
+      workbookPath: string;
+      outputPath: string;
+    }
+  | {
+      name: "export_xml" | "export_xlsx";
+      workbookPath: string;
+      outputPath: string;
+    }
+  | {
+      name: "import_xlsx";
+      inputPath: string;
+      outputPath: string;
+    }
+  | {
+      name: "report_wbs_markdown" | "report_mermaid";
+      workbookPath: string;
       outputPath: string;
     };
 
@@ -114,6 +144,22 @@ export function buildRuntimeArgs(operation: RuntimeOperation): string[] {
       return ["ai", "validate-patch", "--state", operation.statePath, "--in", operation.patchPath];
     case "state_apply_patch":
       return ["state", "apply-patch", "--state", operation.statePath, "--in", operation.patchPath, "--out", operation.outputPath];
+    case "state_diff":
+      return ["state", "diff", "--before", operation.beforePath, "--after", operation.afterPath];
+    case "state_summarize":
+      return ["state", "summarize", "--in", operation.workbookPath];
+    case "export_workbook_json":
+      return ["export", "workbook-json", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "export_xml":
+      return ["export", "xml", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "export_xlsx":
+      return ["export", "xlsx", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "import_xlsx":
+      return ["import", "xlsx", "--in", operation.inputPath, "--out", operation.outputPath];
+    case "report_wbs_markdown":
+      return ["report", "wbs-markdown", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "report_mermaid":
+      return ["report", "mermaid", "--in", operation.workbookPath, "--out", operation.outputPath];
   }
 }
 
@@ -156,7 +202,7 @@ export async function runRuntimeOperation(
         ...config.diagnostics,
         {
           level: "error",
-          code: "upstream_runtime_not_configured",
+          code: errorCategories.upstreamRuntimeFailure,
           message: "No configured or bundled mikuproject runtime artifact is available."
         }
       ]
@@ -207,10 +253,28 @@ export async function runRuntimeOperation(
         ...config.diagnostics,
         {
           level: "error",
-          code: "upstream_runtime_failure",
+          code: classifyRuntimeFailure(failed.stderr || failed.stdout || failed.message || ""),
           message: failed.message || "mikuproject runtime execution failed."
         }
       ]
     };
   }
+}
+
+function classifyRuntimeFailure(output: string) {
+  const lower = output.toLowerCase();
+
+  if (lower.includes("validation") || lower.includes("invalid patch") || lower.includes("schema")) {
+    return errorCategories.upstreamValidationError;
+  }
+
+  if (lower.includes("unsupported") || lower.includes("unknown document kind")) {
+    return errorCategories.unsupportedDocumentKind;
+  }
+
+  if (lower.includes("missing") && (lower.includes("state") || lower.includes("base"))) {
+    return errorCategories.missingBaseState;
+  }
+
+  return errorCategories.upstreamRuntimeFailure;
 }
