@@ -13,8 +13,9 @@ workspace policy, storage policy, and runtime adapter code.
 - [x] Keep all first-version behavior aligned with `mikuproject` semantics and the
       `mikuproject-skills` operation map.
 - [x] Avoid MCP-local reimplementation of upstream conversion logic.
-- [x] Sequence implementation as Node.js / TypeScript first, then Java MCP only
-      after the Node version has been validated in local stdio use.
+- [x] Keep the Node.js / TypeScript implementation as the MCP server.
+- [x] Keep `packages/java/` as a placeholder only unless a concrete future
+      distribution or runtime constraint requires a Java MCP server.
 
 ## Before Implementation
 
@@ -23,7 +24,7 @@ workspace policy, storage policy, and runtime adapter code.
 - [x] Fix initial implementation parameters:
   - [x] package manager: `npm`
   - [x] first implementation: `packages/node/`
-  - [x] later Java implementation: `packages/java/`
+  - [x] Java placeholder directory: `packages/java/`
   - [x] shared MCP contract: `contract/`
   - [x] bundled runtime artifact directory: `runtime/`
   - [x] local workspace directory: `workplace/`
@@ -43,7 +44,8 @@ workspace policy, storage policy, and runtime adapter code.
 
 - [x] Add a user-facing `README.md` that explains the MCP server role, local stdio
       usage, runtime requirements, and relationship to upstream repositories.
-- [x] Add monorepo layout for Node.js / TypeScript and Java MCP implementations.
+- [x] Add monorepo layout for the Node.js / TypeScript MCP implementation and
+      placeholder directories.
 - [x] Add shared MCP contract layout:
   - [x] `contract/tools/`
   - [x] `contract/results/`
@@ -58,9 +60,9 @@ workspace policy, storage policy, and runtime adapter code.
   - [x] local stdio entrypoint
   - [x] resource registry
   - [x] workspace/storage helpers
-- [x] Reserve `packages/java/` for the later Java MCP server implementation.
-- [x] Treat `packages/java/` as a later implementation target, not parallel MVP
-      work. Start it only after the Node MCP server behavior is confirmed.
+- [x] Reserve `packages/java/` as a placeholder only.
+- [x] Do not implement a Java MCP server unless a concrete future constraint
+      justifies it.
 - [x] Add `runtime/` as the bundled runtime artifact directory.
 - [x] Add placeholder layout for:
   - [x] `runtime/mikuproject-java/.gitkeep`
@@ -121,14 +123,13 @@ workflow is stable.
 - Current implementation checkpoint: the first draft-to-state, projection,
   validate-patch, and apply-patch tool path is implemented in the Node MCP
   server.
-- Java MCP implementation is planned after Node MCP validation. Do not start the
-  Java server until the Node server has been exercised enough to confirm the MCP
-  contract and local stdio behavior.
+- `packages/java/` is a placeholder only. The Node.js / TypeScript server is the
+  current MCP server implementation. Java remains a runtime artifact path, not a
+  second MCP server implementation target.
 - Continue with schema validation tests, artifact role naming tests, and resource
   support for current/saved workbook state.
-- Java and Node runtime artifacts are present under `runtime/`, but the policy
-  for version-controlling runtime artifacts and paired `*-sources.*` files still
-  needs a deliberate decision.
+- Runtime artifact policy is decided: keep paired `*-sources.*` traceability
+  artifacts under `runtime/` next to the executable artifacts they describe.
 - Java `phase-detail` compatibility was updated upstream and the MCP adapter now
   uses `--root-task-uid` plus the IPv4 JVM options from the Java upstream
   `.mvn/jvm.config`.
@@ -233,3 +234,64 @@ workflow is stable.
 - [x] Consider HTTP transport only after session identity, workspace isolation,
       authentication, storage policy, upload lifecycle, artifact lifecycle, size
       limits, cleanup, audit, and runtime isolation are explicitly designed.
+
+## Release Readiness
+
+Before treating the Node.js MCP server as a releasable package:
+
+- [x] Rewrite `README.md` to the level needed for real local use:
+      installation, build, MCP client configuration, runtime artifact placement,
+      environment variables, workspace/output behavior, tool/resource/prompt
+      overview, diagnostics, security notes, and Java-after-Node release order.
+- [x] Add a stdio E2E test that starts the built server process and exercises
+      MCP initialize, tool listing, resource access, prompt listing, and at least
+      one tool call over stdio.
+- [x] Fix the consistency between custom `outputPath` values and returned
+      resource URIs. A resource URI must either point to the generated artifact
+      it names, or the result must return only a path/file artifact when the
+      output location is custom.
+- [x] Prepare package metadata for publishing:
+      package name, version policy, `private` flag decision, `bin`, `files`,
+      README linkage, license metadata, and publish command policy.
+- [x] Verify the server with MCP Inspector after build and record the result,
+      including any client-compatibility notes.
+
+## Later: npm Publication
+
+npm publication is desirable for public distribution, but it is intentionally
+deferred. Do not publish to npm until the authentication model, release process,
+runtime artifact policy, and post-publish verification flow are understood and
+accepted.
+
+When this work is resumed:
+
+- [ ] Understand npm publishing authentication options:
+      interactive 2FA, granular access tokens with bypass 2FA, and trusted
+      publishing.
+- [ ] Decide whether the first npm release should be manual or CI-based.
+- [ ] Confirm the npm account can publish under the `@igapyon` scope.
+- [ ] Confirm the public package name:
+      `@igapyon/mikuproject-mcp-node`.
+- [ ] Confirm the final package version in `packages/node/package.json`.
+- [ ] Confirm that bundling runtime artifacts in the npm package is acceptable
+      for license, size, update, and traceability policy.
+- [ ] Run the final local verification:
+      `npm run build`
+      `npm run test`
+- [ ] Review the package contents before publishing:
+      `npm --workspace packages/node pack --dry-run`
+- [ ] Publish the scoped package publicly only after the above items are clear:
+      `npm publish --workspace packages/node --access public`
+- [ ] Confirm the public npm package page is available:
+      `https://www.npmjs.com/package/@igapyon/mikuproject-mcp-node`
+- [ ] Verify install and execution after publishing:
+      `npx -y @igapyon/mikuproject-mcp-node`
+      `npm install -g @igapyon/mikuproject-mcp-node`
+- [ ] Verify MCP client usage after publishing with an `npx` configuration:
+      command `npx`, args `["-y", "@igapyon/mikuproject-mcp-node"]`.
+- [ ] Verify MCP client usage after global install with command
+      `mikuproject-mcp`.
+- [ ] Create a Git tag for the published version.
+- [ ] Create GitHub Release notes for the published version.
+- [ ] Update README or docs if the package should be described as published
+      rather than prepared for future release.

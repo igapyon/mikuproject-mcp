@@ -10,8 +10,16 @@ workplace/upstream/*
 !workplace/upstream/.gitkeep
 
 packages/*/workplace/
+packages/node/README.md
+packages/node/LICENSE
+packages/node/contract/
+packages/node/runtime/
 
 runtime/mikuproject-java/*
 !runtime/mikuproject-java/.gitkeep
+!runtime/mikuproject-java/mikuproject.jar
+!runtime/mikuproject-java/mikuproject-sources.jar
 runtime/mikuproject-node/*
 !runtime/mikuproject-node/.gitkeep
+!runtime/mikuproject-node/mikuproject.mjs
+!runtime/mikuproject-node/mikuproject-sources.tgz

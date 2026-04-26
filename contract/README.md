@@ -2,8 +2,7 @@
 
 This directory contains the shared MCP contract for `mikuproject-mcp`.
 
-Both the Node.js / TypeScript implementation and the later Java implementation
-must preserve this contract:
+The Node.js / TypeScript implementation must preserve this contract:
 
 - tool names
 - input schemas
@@ -19,8 +18,9 @@ Current artifact role names are documented in
 `contract/results/artifact-roles.md`.
 
 Implementation order is part of the contract discipline. The Node.js /
-TypeScript MCP server is the first implementation and the reference used to
-validate local stdio behavior. The Java MCP server should be created only after
-the Node implementation has been exercised and the shared tool, resource,
-prompt, schema, result, diagnostics, workspace, and artifact-role contracts are
-accepted as stable enough to port.
+TypeScript MCP server is the current implementation and the reference used to
+validate local stdio behavior.
+
+`packages/java/` is a placeholder only. Do not add a Java MCP server unless a
+concrete future distribution or runtime constraint justifies maintaining a
+second MCP server implementation.

@@ -90,7 +90,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ draftPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const stateOutputPath = outputPath || `${workspace.root}/mikuproject/state/current-workbook.json`;
+      const defaultStateOutputPath = `${workspace.root}/mikuproject/state/current-workbook.json`;
+      const stateOutputPath = outputPath || defaultStateOutputPath;
       ensureParentDirectory(stateOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "state_from_draft",
@@ -111,11 +112,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "workbook_state",
-                uri: "mikuproject://state/current",
-                path: stateOutputPath
-              }
+              artifactRef("workbook_state", stateOutputPath, defaultStateOutputPath, "mikuproject://state/current")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -141,7 +138,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const overviewOutputPath = outputPath || `${workspace.root}/mikuproject/projection/project-overview.editjson`;
+      const defaultOverviewOutputPath = `${workspace.root}/mikuproject/projection/project-overview.editjson`;
+      const overviewOutputPath = outputPath || defaultOverviewOutputPath;
       ensureParentDirectory(overviewOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "ai_export_project_overview",
@@ -162,11 +160,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "projection",
-                uri: "mikuproject://projection/project-overview",
-                path: overviewOutputPath
-              }
+              artifactRef("projection", overviewOutputPath, defaultOverviewOutputPath, "mikuproject://projection/project-overview")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -193,7 +187,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, taskUid, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const taskEditOutputPath = outputPath || `${workspace.root}/mikuproject/projection/task-${taskUid}.editjson`;
+      const defaultTaskEditOutputPath = `${workspace.root}/mikuproject/projection/task-${taskUid}.editjson`;
+      const taskEditOutputPath = outputPath || defaultTaskEditOutputPath;
       ensureParentDirectory(taskEditOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "ai_export_task_edit",
@@ -216,11 +211,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "projection",
-                uri: `mikuproject://projection/task-edit/${taskUid}`,
-                path: taskEditOutputPath
-              }
+              artifactRef("projection", taskEditOutputPath, defaultTaskEditOutputPath, `mikuproject://projection/task-edit/${taskUid}`)
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -250,7 +241,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, phaseUid, mode, rootTaskUid, maxDepth, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const phaseDetailOutputPath = outputPath || `${workspace.root}/mikuproject/projection/phase-${phaseUid}.editjson`;
+      const defaultPhaseDetailOutputPath = `${workspace.root}/mikuproject/projection/phase-${phaseUid}.editjson`;
+      const phaseDetailOutputPath = outputPath || defaultPhaseDetailOutputPath;
       ensureParentDirectory(phaseDetailOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "ai_export_phase_detail",
@@ -279,11 +271,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "projection",
-                uri: `mikuproject://projection/phase-detail/${phaseUid}`,
-                path: phaseDetailOutputPath
-              }
+              artifactRef("projection", phaseDetailOutputPath, defaultPhaseDetailOutputPath, `mikuproject://projection/phase-detail/${phaseUid}`)
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -345,7 +333,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ statePath, patchPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const stateOutputPath = outputPath || `${workspace.root}/mikuproject/state/next-workbook.json`;
+      const defaultStateOutputPath = `${workspace.root}/mikuproject/state/next-workbook.json`;
+      const stateOutputPath = outputPath || defaultStateOutputPath;
       ensureParentDirectory(stateOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "state_apply_patch",
@@ -368,11 +357,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "workbook_state",
-                uri: "mikuproject://state/next",
-                path: stateOutputPath
-              }
+              artifactRef("workbook_state", stateOutputPath, defaultStateOutputPath, "mikuproject://state/next")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -465,7 +450,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const workbookOutputPath = outputPath || `${workspace.root}/mikuproject/export/workbook.json`;
+      const defaultWorkbookOutputPath = `${workspace.root}/mikuproject/export/workbook.json`;
+      const workbookOutputPath = outputPath || defaultWorkbookOutputPath;
       ensureParentDirectory(workbookOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "export_workbook_json",
@@ -486,11 +472,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "mikuproject_workbook_json",
-                uri: "mikuproject://export/workbook-json",
-                path: workbookOutputPath
-              }
+              artifactRef("mikuproject_workbook_json", workbookOutputPath, defaultWorkbookOutputPath, "mikuproject://export/workbook-json")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -516,7 +498,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const xmlOutputPath = outputPath || `${workspace.root}/mikuproject/export/project.xml`;
+      const defaultXmlOutputPath = `${workspace.root}/mikuproject/export/project.xml`;
+      const xmlOutputPath = outputPath || defaultXmlOutputPath;
       ensureParentDirectory(xmlOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "export_xml",
@@ -537,11 +520,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "ms_project_xml",
-                uri: "mikuproject://export/project-xml",
-                path: xmlOutputPath
-              }
+              artifactRef("ms_project_xml", xmlOutputPath, defaultXmlOutputPath, "mikuproject://export/project-xml")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -567,7 +546,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const xlsxOutputPath = outputPath || `${workspace.root}/mikuproject/export/project.xlsx`;
+      const defaultXlsxOutputPath = `${workspace.root}/mikuproject/export/project.xlsx`;
+      const xlsxOutputPath = outputPath || defaultXlsxOutputPath;
       ensureParentDirectory(xlsxOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "export_xlsx",
@@ -588,11 +568,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "xlsx_workbook",
-                uri: "mikuproject://export/project-xlsx",
-                path: xlsxOutputPath
-              }
+              artifactRef("xlsx_workbook", xlsxOutputPath, defaultXlsxOutputPath, "mikuproject://export/project-xlsx")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -618,7 +594,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ inputPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const stateOutputPath = outputPath || `${workspace.root}/mikuproject/state/imported-workbook.json`;
+      const defaultStateOutputPath = `${workspace.root}/mikuproject/state/imported-workbook.json`;
+      const stateOutputPath = outputPath || defaultStateOutputPath;
       ensureParentDirectory(stateOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "import_xlsx",
@@ -639,11 +616,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "workbook_state",
-                uri: "mikuproject://state/imported-workbook",
-                path: stateOutputPath
-              }
+              artifactRef("workbook_state", stateOutputPath, defaultStateOutputPath, "mikuproject://state/imported-workbook")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -669,7 +642,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const reportOutputPath = outputPath || `${workspace.root}/mikuproject/report/wbs.md`;
+      const defaultReportOutputPath = `${workspace.root}/mikuproject/report/wbs.md`;
+      const reportOutputPath = outputPath || defaultReportOutputPath;
       ensureParentDirectory(reportOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "report_wbs_markdown",
@@ -690,11 +664,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "report_output",
-                uri: "mikuproject://report/wbs-markdown",
-                path: reportOutputPath
-              }
+              artifactRef("report_output", reportOutputPath, defaultReportOutputPath, "mikuproject://report/wbs-markdown")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -720,7 +690,8 @@ export function registerMikuprojectTools(server: McpServer): void {
     async ({ workbookPath, outputPath }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
-      const reportOutputPath = outputPath || `${workspace.root}/mikuproject/report/project.mmd`;
+      const defaultReportOutputPath = `${workspace.root}/mikuproject/report/project.mmd`;
+      const reportOutputPath = outputPath || defaultReportOutputPath;
       ensureParentDirectory(reportOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "report_mermaid",
@@ -741,11 +712,7 @@ export function registerMikuprojectTools(server: McpServer): void {
         },
         artifacts: runtimeResult.ok
           ? [
-              {
-                role: "report_output",
-                uri: "mikuproject://report/mermaid",
-                path: reportOutputPath
-              }
+              artifactRef("report_output", reportOutputPath, defaultReportOutputPath, "mikuproject://report/mermaid")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -754,6 +721,10 @@ export function registerMikuprojectTools(server: McpServer): void {
       });
     }
   );
+}
+
+function artifactRef(role: string, path: string, uriBackedPath: string, uri: string): ArtifactRef {
+  return path === uriBackedPath ? { role, uri, path } : { role, path };
 }
 
 function asPersistedTextResult(result: CommonResult) {
