@@ -1,0 +1,12 @@
+{
+  "name": "mikuproject-mcp-repo",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "packages/node"
+  ],
+  "scripts": {
+    "build": "npm --workspace packages/node run build",
+    "test": "npm --workspace packages/node run test"
+  }
+}
