@@ -104,13 +104,28 @@ Implement product-prefixed tools with JSON Schema input and structured results.
 - [x] `mikuproject.ai_export_task_edit`
 - [x] `mikuproject.ai_export_phase_detail`
 - [x] `mikuproject.ai_validate_patch`
-- [ ] `mikuproject.state_apply_patch`
+- [x] `mikuproject.state_apply_patch`
 - [ ] `mikuproject.state_diff`
 - [ ] `mikuproject.state_summarize`
 - [ ] `mikuproject.export_workbook_json`
 
 File import/export and report generation should wait until the core state
 workflow is stable.
+
+## Resume Notes
+
+- Current implementation checkpoint: the first draft-to-state, projection,
+  validate-patch, and apply-patch tool path is implemented in the Node MCP
+  server.
+- Continue with `mikuproject.state_diff`, then `mikuproject.state_summarize`,
+  then `mikuproject.export_workbook_json`.
+- Java and Node runtime artifacts are present under `runtime/`, but the policy
+  for version-controlling runtime artifacts and paired `*-sources.*` files still
+  needs a deliberate decision.
+- Java `phase-detail` compatibility was updated upstream and the MCP adapter now
+  uses `--root-task-uid` plus the IPv4 JVM options from the Java upstream
+  `.mvn/jvm.config`.
+- Verification checkpoint command: `npm run build && npm run test`.
 
 ## Schemas and Results
 

@@ -10,7 +10,8 @@ const toolSchemaFiles = {
   "mikuproject.ai_export_project_overview": "mikuproject.ai_export_project_overview.input.schema.json",
   "mikuproject.ai_export_task_edit": "mikuproject.ai_export_task_edit.input.schema.json",
   "mikuproject.ai_export_phase_detail": "mikuproject.ai_export_phase_detail.input.schema.json",
-  "mikuproject.ai_validate_patch": "mikuproject.ai_validate_patch.input.schema.json"
+  "mikuproject.ai_validate_patch": "mikuproject.ai_validate_patch.input.schema.json",
+  "mikuproject.state_apply_patch": "mikuproject.state_apply_patch.input.schema.json"
 } as const;
 
 export type ContractToolName = keyof typeof toolSchemaFiles;
@@ -27,6 +28,7 @@ export function loadInitialToolInputSchemas(): Record<ContractToolName, JsonSche
     "mikuproject.ai_export_project_overview": loadToolInputSchema("mikuproject.ai_export_project_overview"),
     "mikuproject.ai_export_task_edit": loadToolInputSchema("mikuproject.ai_export_task_edit"),
     "mikuproject.ai_export_phase_detail": loadToolInputSchema("mikuproject.ai_export_phase_detail"),
-    "mikuproject.ai_validate_patch": loadToolInputSchema("mikuproject.ai_validate_patch")
+    "mikuproject.ai_validate_patch": loadToolInputSchema("mikuproject.ai_validate_patch"),
+    "mikuproject.state_apply_patch": loadToolInputSchema("mikuproject.state_apply_patch")
   };
 }

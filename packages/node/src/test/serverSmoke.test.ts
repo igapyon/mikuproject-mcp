@@ -23,6 +23,7 @@ describe("MCP server smoke", () => {
         "mikuproject.ai_export_task_edit",
         "mikuproject.ai_spec",
         "mikuproject.ai_validate_patch",
+        "mikuproject.state_apply_patch",
         "mikuproject.state_from_draft"
       ]);
     } finally {
@@ -362,6 +363,71 @@ describe("MCP server smoke", () => {
       await fixture.close();
       restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
       restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+    }
+  });
+
+  it("calls state_apply_patch and returns the generated next state artifact", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-apply-patch-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const workspacePath = join(tempRoot, "workspace");
+    const statePath = join(tempRoot, "workbook.json");
+    const patchPath = join(tempRoot, "patch.editjson");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';",
+        "import { dirname } from 'node:path';",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'state apply-patch --state ' + args[3] + ' --in ' + args[5] + ' --out ' + args[7]) {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "const state = JSON.parse(readFileSync(args[3], 'utf8'));",
+        "const patch = JSON.parse(readFileSync(args[5], 'utf8'));",
+        "mkdirSync(dirname(args[7]), { recursive: true });",
+        "writeFileSync(args[7], JSON.stringify({ kind: 'mikuproject_workbook_json', patched: true, state, patch }, null, 2));"
+      ].join("\n")
+    );
+    writeFileSync(statePath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Smoke" } }));
+    writeFileSync(patchPath, JSON.stringify({ kind: "patch_json", operations: [{ op: "test" }] }));
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const result = await fixture.client.callTool({
+        name: "mikuproject.state_apply_patch",
+        arguments: {
+          statePath,
+          patchPath
+        }
+      });
+      const content = assertTextToolContent(result.content);
+      const parsed = JSON.parse(content[0].text);
+
+      assert.equal(parsed.ok, true);
+      assert.equal(parsed.operation, "mikuproject.state_apply_patch");
+      assert.equal(parsed.artifacts[0].role, "workbook_state");
+      assert.equal(parsed.artifacts[0].uri, "mikuproject://state/next");
+      assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/state/next-workbook.json"));
+
+      const nextState = JSON.parse(readFileSync(parsed.artifacts[0].path, "utf8"));
+      assert.equal(nextState.kind, "mikuproject_workbook_json");
+      assert.equal(nextState.patched, true);
+      assert.equal(nextState.state.project.name, "Smoke");
+      assert.equal(nextState.patch.operations.length, 1);
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
     }
   });
 });
