@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.state_from_draft.input.schema.json",
+  "title": "mikuproject.state_from_draft input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["draftPath"],
+  "properties": {
+    "draftPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to a mikuproject draft document."
+    },
+    "outputPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional path for the generated workbook JSON state."
+    }
+  }
+}
