@@ -21,6 +21,5 @@ Implementation order is part of the contract discipline. The Node.js /
 TypeScript MCP server is the current implementation and the reference used to
 validate local stdio behavior.
 
-`packages/java/` is a placeholder only. Do not add a Java MCP server unless a
-concrete future distribution or runtime constraint justifies maintaining a
-second MCP server implementation.
+`packages/java/` is a placeholder only. Do not add another MCP server
+implementation unless a concrete future requirement justifies maintaining it.
