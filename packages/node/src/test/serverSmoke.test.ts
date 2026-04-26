@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
@@ -7,6 +7,7 @@ import { describe, it } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMikuprojectServer } from "../server/createServer.js";
+import { resolveWorkspaceConfig } from "../workspace/workspace.js";
 
 describe("MCP server smoke", () => {
   it("starts and exposes CLI-derived tool names", async () => {
@@ -23,11 +24,33 @@ describe("MCP server smoke", () => {
         "mikuproject.ai_export_task_edit",
         "mikuproject.ai_spec",
         "mikuproject.ai_validate_patch",
+        "mikuproject.export_workbook_json",
+        "mikuproject.export_xlsx",
+        "mikuproject.export_xml",
+        "mikuproject.import_xlsx",
+        "mikuproject.report_mermaid",
+        "mikuproject.report_wbs_markdown",
         "mikuproject.state_apply_patch",
-        "mikuproject.state_from_draft"
+        "mikuproject.state_diff",
+        "mikuproject.state_from_draft",
+        "mikuproject.state_summarize"
       ]);
     } finally {
       await fixture.close();
+    }
+  });
+
+  it("uses the repository workspace as the default workspace root", () => {
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    delete process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    try {
+      const workspace = resolveWorkspaceConfig();
+
+      assert.match(workspace.root, /mikuproject-mcp\/workplace$/);
+    } finally {
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
     }
   });
 
@@ -62,6 +85,133 @@ describe("MCP server smoke", () => {
       assert.equal(result.contents.length, 1);
       assert.equal(result.contents[0].uri, "mikuproject://spec/ai-json");
       assert.equal("text" in result.contents[0], true);
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  it("reads current and saved workbook state resources", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-state-resource-"));
+    const workspacePath = join(tempRoot, "workspace");
+    const stateDir = join(workspacePath, "mikuproject", "state");
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    mkdirSync(stateDir, { recursive: true });
+    writeFileSync(
+      join(stateDir, "current-workbook.json"),
+      JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Current" } })
+    );
+    writeFileSync(
+      join(stateDir, "baseline.json"),
+      JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Baseline" } })
+    );
+
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const current = await fixture.client.readResource({
+        uri: "mikuproject://state/current"
+      });
+      const currentContent = assertTextResourceContent(current.contents);
+      const currentState = JSON.parse(currentContent[0].text);
+
+      assert.equal(currentContent[0].uri, "mikuproject://state/current");
+      assert.equal(currentState.kind, "mikuproject_workbook_json");
+      assert.equal(currentState.project.name, "Current");
+
+      const saved = await fixture.client.readResource({
+        uri: "mikuproject://state/baseline"
+      });
+      const savedContent = assertTextResourceContent(saved.contents);
+      const savedState = JSON.parse(savedContent[0].text);
+
+      assert.equal(savedContent[0].uri, "mikuproject://state/baseline");
+      assert.equal(savedState.kind, "mikuproject_workbook_json");
+      assert.equal(savedState.project.name, "Baseline");
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
+    }
+  });
+
+  it("reads operation summary and diagnostics resources", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-operation-resource-"));
+    const workspacePath = join(tempRoot, "workspace");
+    const summaryDir = join(workspacePath, "mikuproject", "summary");
+    const diagnosticsDir = join(workspacePath, "mikuproject", "diagnostics");
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    mkdirSync(summaryDir, { recursive: true });
+    mkdirSync(diagnosticsDir, { recursive: true });
+    writeFileSync(
+      join(summaryDir, "op-123.json"),
+      JSON.stringify({ operationId: "op-123", operation: "mikuproject.state_diff", changeCount: 1 })
+    );
+    writeFileSync(
+      join(diagnosticsDir, "op-123.json"),
+      JSON.stringify({ operationId: "op-123", diagnostics: [{ level: "info", code: "ok", message: "done" }] })
+    );
+
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const summary = await fixture.client.readResource({
+        uri: "mikuproject://summary/op-123"
+      });
+      const summaryContent = assertTextResourceContent(summary.contents);
+      const summaryJson = JSON.parse(summaryContent[0].text);
+
+      assert.equal(summaryContent[0].uri, "mikuproject://summary/op-123");
+      assert.equal(summaryJson.operationId, "op-123");
+      assert.equal(summaryJson.operation, "mikuproject.state_diff");
+      assert.equal(summaryJson.changeCount, 1);
+
+      const diagnostics = await fixture.client.readResource({
+        uri: "mikuproject://diagnostics/op-123"
+      });
+      const diagnosticsContent = assertTextResourceContent(diagnostics.contents);
+      const diagnosticsJson = JSON.parse(diagnosticsContent[0].text);
+
+      assert.equal(diagnosticsContent[0].uri, "mikuproject://diagnostics/op-123");
+      assert.equal(diagnosticsJson.operationId, "op-123");
+      assert.equal(diagnosticsJson.diagnostics[0].code, "ok");
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
+    }
+  });
+
+  it("lists and gets product-specific prompts", async () => {
+    const fixture = await connectServer();
+
+    try {
+      const prompts = await fixture.client.listPrompts();
+      const promptNames = prompts.prompts.map((prompt) => prompt.name).sort();
+
+      assert.deepEqual(promptNames, [
+        "mikuproject.create_project_draft",
+        "mikuproject.review_artifact_diagnostics",
+        "mikuproject.revise_state_with_patch"
+      ]);
+
+      const prompt = await fixture.client.getPrompt({
+        name: "mikuproject.revise_state_with_patch",
+        arguments: {
+          stateUri: "mikuproject://state/current",
+          changeRequest: "Update task 123."
+        }
+      });
+
+      assert.equal(prompt.messages.length, 1);
+      assert.equal(prompt.messages[0].role, "user");
+      assert.equal(prompt.messages[0].content.type, "text");
+      assert.match(prompt.messages[0].content.text, /mikuproject patch workflow/);
+      assert.match(prompt.messages[0].content.text, /mikuproject:\/\/spec\/ai-json/);
+      assert.match(prompt.messages[0].content.text, /Update task 123\./);
     } finally {
       await fixture.close();
     }
@@ -430,6 +580,294 @@ describe("MCP server smoke", () => {
       restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
     }
   });
+
+  it("calls state_diff and returns diff stdout", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-state-diff-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const workspacePath = join(tempRoot, "workspace");
+    const beforePath = join(tempRoot, "workbook-before.json");
+    const afterPath = join(tempRoot, "workbook-after.json");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { readFileSync } from 'node:fs';",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'state diff --before ' + args[3] + ' --after ' + args[5]) {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "const before = JSON.parse(readFileSync(args[3], 'utf8'));",
+        "const after = JSON.parse(readFileSync(args[5], 'utf8'));",
+        "console.log(JSON.stringify({ kind: 'mikuproject_state_diff', before: before.project.name, after: after.project.name, changes: 1 }));"
+      ].join("\n")
+    );
+    writeFileSync(beforePath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Before" } }));
+    writeFileSync(afterPath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "After" } }));
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const result = await fixture.client.callTool({
+        name: "mikuproject.state_diff",
+        arguments: {
+          beforePath,
+          afterPath
+        }
+      });
+      const content = assertTextToolContent(result.content);
+      const parsed = JSON.parse(content[0].text);
+
+      assert.equal(parsed.ok, true);
+      assert.equal(parsed.operation, "mikuproject.state_diff");
+      assert.equal(typeof parsed.operationId, "string");
+      assert.equal(parsed.input.beforePath, beforePath);
+      assert.equal(parsed.input.afterPath, afterPath);
+      assert.equal(parsed.artifacts[0].role, "operation_summary");
+      assert.equal(parsed.artifacts[0].uri, `mikuproject://summary/${parsed.operationId}`);
+      assert.equal(parsed.artifacts[1].role, "diagnostics_log");
+      assert.equal(parsed.artifacts[1].uri, `mikuproject://diagnostics/${parsed.operationId}`);
+
+      const diff = JSON.parse(parsed.stdout);
+      assert.equal(diff.kind, "mikuproject_state_diff");
+      assert.equal(diff.before, "Before");
+      assert.equal(diff.after, "After");
+      assert.equal(diff.changes, 1);
+
+      const summary = await fixture.client.readResource({
+        uri: `mikuproject://summary/${parsed.operationId}`
+      });
+      const summaryContent = assertTextResourceContent(summary.contents);
+      const summaryJson = JSON.parse(summaryContent[0].text);
+
+      assert.equal(summaryJson.operationId, parsed.operationId);
+      assert.equal(summaryJson.operation, "mikuproject.state_diff");
+      assert.equal(summaryJson.diagnosticsCount, parsed.diagnostics.length);
+
+      const diagnostics = await fixture.client.readResource({
+        uri: `mikuproject://diagnostics/${parsed.operationId}`
+      });
+      const diagnosticsContent = assertTextResourceContent(diagnostics.contents);
+      const diagnosticsJson = JSON.parse(diagnosticsContent[0].text);
+
+      assert.equal(diagnosticsJson.operationId, parsed.operationId);
+      assert.equal(diagnosticsJson.operation, "mikuproject.state_diff");
+      assert.equal(diagnosticsJson.diagnostics[0].code, "configured_node_runtime");
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
+    }
+  });
+
+  it("calls state_summarize and returns summary stdout", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-state-summarize-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const workbookPath = join(tempRoot, "workbook.json");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { readFileSync } from 'node:fs';",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'state summarize --in ' + args[3]) {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "const workbook = JSON.parse(readFileSync(args[3], 'utf8'));",
+        "console.log(JSON.stringify({ kind: 'mikuproject_state_summary', project: workbook.project.name, taskCount: workbook.tasks.length }));"
+      ].join("\n")
+    );
+    writeFileSync(
+      workbookPath,
+      JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Smoke" }, tasks: [{ uid: "1" }] })
+    );
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const result = await fixture.client.callTool({
+        name: "mikuproject.state_summarize",
+        arguments: {
+          workbookPath
+        }
+      });
+      const content = assertTextToolContent(result.content);
+      const parsed = JSON.parse(content[0].text);
+
+      assert.equal(parsed.ok, true);
+      assert.equal(parsed.operation, "mikuproject.state_summarize");
+      assert.equal(parsed.input.workbookPath, workbookPath);
+
+      const summary = JSON.parse(parsed.stdout);
+      assert.equal(summary.kind, "mikuproject_state_summary");
+      assert.equal(summary.project, "Smoke");
+      assert.equal(summary.taskCount, 1);
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+    }
+  });
+
+  it("calls export_workbook_json and returns the exported workbook artifact", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-export-workbook-json-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const workspacePath = join(tempRoot, "workspace");
+    const workbookPath = join(tempRoot, "workbook.json");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';",
+        "import { dirname } from 'node:path';",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'export workbook-json --in ' + args[3] + ' --out ' + args[5]) {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "const workbook = JSON.parse(readFileSync(args[3], 'utf8'));",
+        "mkdirSync(dirname(args[5]), { recursive: true });",
+        "writeFileSync(args[5], JSON.stringify({ kind: 'mikuproject_workbook_json', exported: true, project: workbook.project }, null, 2));"
+      ].join("\n")
+    );
+    writeFileSync(workbookPath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Smoke" } }));
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const result = await fixture.client.callTool({
+        name: "mikuproject.export_workbook_json",
+        arguments: {
+          workbookPath
+        }
+      });
+      const content = assertTextToolContent(result.content);
+      const parsed = JSON.parse(content[0].text);
+
+      assert.equal(parsed.ok, true);
+      assert.equal(parsed.operation, "mikuproject.export_workbook_json");
+      assert.equal(parsed.artifacts[0].role, "mikuproject_workbook_json");
+      assert.equal(parsed.artifacts[0].uri, "mikuproject://export/workbook-json");
+      assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/export/workbook.json"));
+
+      const exported = JSON.parse(readFileSync(parsed.artifacts[0].path, "utf8"));
+      assert.equal(exported.kind, "mikuproject_workbook_json");
+      assert.equal(exported.exported, true);
+      assert.equal(exported.project.name, "Smoke");
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
+    }
+  });
+
+  it("calls file import/export and report tools", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-file-report-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const workspacePath = join(tempRoot, "workspace");
+    const workbookPath = join(tempRoot, "workbook.json");
+    const xlsxPath = join(tempRoot, "project.xlsx");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';",
+        "import { dirname } from 'node:path';",
+        "const args = process.argv.slice(2);",
+        "const joined = args.join(' ');",
+        "function write(path, text) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, text); }",
+        "if (joined === 'export xml --in ' + args[3] + ' --out ' + args[5]) {",
+        "  const workbook = JSON.parse(readFileSync(args[3], 'utf8'));",
+        "  write(args[5], '<Project><Name>' + workbook.project.name + '</Name></Project>');",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'export xlsx --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], 'xlsx:' + JSON.parse(readFileSync(args[3], 'utf8')).project.name);",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'import xlsx --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], JSON.stringify({ kind: 'mikuproject_workbook_json', imported: readFileSync(args[3], 'utf8') }, null, 2));",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'report wbs-markdown --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], '# WBS\\n\\n- ' + JSON.parse(readFileSync(args[3], 'utf8')).project.name);",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'report mermaid --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], 'graph TD; A[' + JSON.parse(readFileSync(args[3], 'utf8')).project.name + '];');",
+        "  process.exit(0);",
+        "}",
+        "console.error('unexpected args: ' + joined);",
+        "process.exit(2);"
+      ].join("\n")
+    );
+    writeFileSync(workbookPath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Smoke" } }));
+    writeFileSync(xlsxPath, "source xlsx");
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const exportXml = await callJsonTool(fixture.client, "mikuproject.export_xml", { workbookPath });
+      assert.equal(exportXml.ok, true);
+      assert.equal(exportXml.artifacts[0].role, "ms_project_xml");
+      assert.equal(exportXml.artifacts[0].path, join(workspacePath, "mikuproject/export/project.xml"));
+      assert.match(readFileSync(exportXml.artifacts[0].path, "utf8"), /<Name>Smoke<\/Name>/);
+
+      const exportXlsx = await callJsonTool(fixture.client, "mikuproject.export_xlsx", { workbookPath });
+      assert.equal(exportXlsx.ok, true);
+      assert.equal(exportXlsx.artifacts[0].role, "xlsx_workbook");
+      assert.equal(readFileSync(exportXlsx.artifacts[0].path, "utf8"), "xlsx:Smoke");
+
+      const importXlsx = await callJsonTool(fixture.client, "mikuproject.import_xlsx", { inputPath: xlsxPath });
+      assert.equal(importXlsx.ok, true);
+      assert.equal(importXlsx.artifacts[0].role, "workbook_state");
+      assert.equal(JSON.parse(readFileSync(importXlsx.artifacts[0].path, "utf8")).imported, "source xlsx");
+
+      const wbs = await callJsonTool(fixture.client, "mikuproject.report_wbs_markdown", { workbookPath });
+      assert.equal(wbs.ok, true);
+      assert.equal(wbs.artifacts[0].role, "report_output");
+      assert.match(readFileSync(wbs.artifacts[0].path, "utf8"), /# WBS/);
+
+      const mermaid = await callJsonTool(fixture.client, "mikuproject.report_mermaid", { workbookPath });
+      assert.equal(mermaid.ok, true);
+      assert.equal(mermaid.artifacts[0].role, "report_output");
+      assert.match(readFileSync(mermaid.artifacts[0].path, "utf8"), /graph TD/);
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
+    }
+  });
 });
 
 async function connectServer(): Promise<{
@@ -466,6 +904,30 @@ function assertTextToolContent(content: unknown): Array<{ type: "text"; text: st
   assert.equal(typeof first.text, "string");
 
   return content as Array<{ type: "text"; text: string }>;
+}
+
+async function callJsonTool(client: Client, name: string, args: Record<string, unknown>) {
+  const result = await client.callTool({
+    name,
+    arguments: args
+  });
+  const content = assertTextToolContent(result.content);
+
+  return JSON.parse(content[0].text);
+}
+
+function assertTextResourceContent(content: unknown): Array<{ uri: string; text: string }> {
+  if (!Array.isArray(content)) {
+    assert.fail("Expected resource content to be an array.");
+  }
+
+  assert.equal(content.length, 1);
+
+  const first = content[0] as { uri?: unknown; text?: unknown };
+  assert.equal(typeof first.uri, "string");
+  assert.equal(typeof first.text, "string");
+
+  return content as Array<{ uri: string; text: string }>;
 }
 
 function restoreEnv(name: string, value: string | undefined): void {

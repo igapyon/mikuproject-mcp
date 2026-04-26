@@ -14,3 +14,13 @@ must preserve this contract:
 - diagnostics and error categories
 
 The contract should not live only as implicit TypeScript code.
+
+Current artifact role names are documented in
+`contract/results/artifact-roles.md`.
+
+Implementation order is part of the contract discipline. The Node.js /
+TypeScript MCP server is the first implementation and the reference used to
+validate local stdio behavior. The Java MCP server should be created only after
+the Node implementation has been exercised and the shared tool, resource,
+prompt, schema, result, diagnostics, workspace, and artifact-role contracts are
+accepted as stable enough to port.

@@ -1,13 +1,14 @@
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { repositoryRoot } from "../contract/contractPaths.js";
 
 export type WorkspaceConfig = {
   root: string;
 };
 
-export function resolveWorkspaceConfig(cwd = process.cwd()): WorkspaceConfig {
+export function resolveWorkspaceConfig(): WorkspaceConfig {
   return {
-    root: resolve(process.env.MIKUPROJECT_MCP_WORKSPACE || resolve(cwd, "workplace"))
+    root: resolve(process.env.MIKUPROJECT_MCP_WORKSPACE || resolve(repositoryRoot, "workplace"))
   };
 }
 

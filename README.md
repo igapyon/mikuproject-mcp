@@ -21,6 +21,13 @@ The first implementation target is a local stdio MCP server in
 `packages/node/`. A later Java implementation should preserve the shared MCP
 contract under `contract/`.
 
+The Java MCP server is planned, but it is intentionally sequenced after the
+Node.js / TypeScript server. First, validate the Node.js implementation in real
+local stdio use and confirm that the tool, resource, prompt, result, workspace,
+diagnostics, and artifact-role contracts are acceptable. Only after that
+confirmation should `packages/java/` be implemented as a Java version of the
+stabilized MCP adapter contract.
+
 ## Runtime Artifacts
 
 Bundled or locally configured upstream runtime artifacts belong under
