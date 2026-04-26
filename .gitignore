@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+*.log
+
+workplace/*
+!workplace/.gitkeep
+!workplace/upstream/
+workplace/upstream/*
+!workplace/upstream/.gitkeep
+
+packages/*/workplace/
+
+runtime/mikuproject-java/*
+!runtime/mikuproject-java/.gitkeep
+runtime/mikuproject-node/*
+!runtime/mikuproject-node/.gitkeep

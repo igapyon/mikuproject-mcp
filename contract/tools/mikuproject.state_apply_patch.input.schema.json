@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.state_apply_patch.input.schema.json",
+  "title": "mikuproject.state_apply_patch input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["statePath", "patchPath"],
+  "properties": {
+    "statePath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to the source mikuproject workbook JSON state."
+    },
+    "patchPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to the mikuproject patch document to apply."
+    },
+    "outputPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional path for the generated next workbook JSON state."
+    }
+  }
+}

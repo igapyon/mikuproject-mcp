@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/results/common-result.schema.json",
+  "title": "mikuproject MCP common result",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["ok", "operation", "diagnostics"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "operation": {
+      "type": "string"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["level", "message"],
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": ["info", "warning", "error"]
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["role", "uri"],
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
