@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.ai_export_task_edit.input.schema.json",
+  "title": "mikuproject.ai_export_task_edit input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workbookPath", "taskUid"],
+  "properties": {
+    "workbookPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to a mikuproject workbook JSON file passed to the upstream CLI as --in."
+    },
+    "taskUid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Task UID passed to the upstream CLI as --task-uid."
+    },
+    "outputPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional path for the generated task_edit_view projection."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.ai_detect_kind.input.schema.json",
+  "title": "mikuproject.ai_detect_kind input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["path"],
+  "properties": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Input file path passed to the upstream CLI as --in."
+    }
+  }
+}

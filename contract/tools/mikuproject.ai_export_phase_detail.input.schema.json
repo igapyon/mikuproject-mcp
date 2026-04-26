@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.ai_export_phase_detail.input.schema.json",
+  "title": "mikuproject.ai_export_phase_detail input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workbookPath", "phaseUid"],
+  "properties": {
+    "workbookPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to a mikuproject workbook JSON file passed to the upstream CLI as --in."
+    },
+    "phaseUid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Phase task UID passed to the upstream CLI as --phase-uid."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["scoped", "full"],
+      "description": "Optional phase-detail mode passed to the upstream CLI as --mode."
+    },
+    "rootTaskUid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional scoped root task UID passed to the upstream CLI as --root-task-uid."
+    },
+    "maxDepth": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Optional non-negative scoped depth passed to the upstream CLI as --max-depth."
+    },
+    "outputPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional path for the generated phase_detail_view projection."
+    }
+  }
+}
