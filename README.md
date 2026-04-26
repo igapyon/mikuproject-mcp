@@ -61,6 +61,58 @@ Example:
 If your MCP client runs from a different working directory, use paths that are
 valid for that client environment.
 
+## Release Tarball Usage
+
+GitHub Releases may provide an npm package tarball asset named like:
+
+```text
+igapyon-mikuproject-mcp-node-0.1.0.tgz
+```
+
+After downloading the tarball, install it globally:
+
+```sh
+npm install -g ./igapyon-mikuproject-mcp-node-0.1.0.tgz
+```
+
+Then configure your MCP client to run the installed command:
+
+```json
+{
+  "mcpServers": {
+    "mikuproject": {
+      "command": "mikuproject-mcp"
+    }
+  }
+}
+```
+
+You can also run the release tarball directly with `npm exec` without a global
+install. Replace the version and URL with the release asset you want to use:
+
+```sh
+npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.1.0/igapyon-mikuproject-mcp-node-0.1.0.tgz -- mikuproject-mcp
+```
+
+Example MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "mikuproject": {
+      "command": "npm",
+      "args": [
+        "exec",
+        "--yes",
+        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.1.0/igapyon-mikuproject-mcp-node-0.1.0.tgz",
+        "--",
+        "mikuproject-mcp"
+      ]
+    }
+  }
+}
+```
+
 ## Runtime Configuration
 
 By default, runtime artifacts are resolved from `runtime/`.
