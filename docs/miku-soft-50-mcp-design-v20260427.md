@@ -401,9 +401,17 @@ Recommended runtime artifact layout:
 runtime/
   mikuproject-java/
     mikuproject.jar
+    mikuproject-sources.jar
   mikuproject-node/
     mikuproject.mjs
+    mikuproject-sources.tgz
 ```
+
+`runtime/` is the installed runtime surface for the MCP adapter. It should
+contain the runnable artifact and its paired `*-sources.*` traceability artifact
+for each bundled runtime. The MCP server executes only the runnable artifact, but
+the paired source artifact keeps the runtime bundle auditable without requiring
+the full upstream source checkout.
 
 The exact filenames may differ by product, but the artifact role should remain clear in directory names, package metadata, and diagnostics.
 
@@ -755,6 +763,17 @@ calls, resource reads, prompts, generated artifacts, diagnostics, workspace
 storage, runtime fallback behavior, and artifact-role naming. After that
 validation produces an acceptable conclusion, use the Node MCP server and the
 checked-in `contract/` files as the reference for `packages/java/`.
+
+The Java MCP server has an explicit release gate. It should be created only
+after the Node MCP server has been released as the Node version of
+`mikuproject-mcp` and stable operation has been observed. "Stable operation"
+means that the Node release can be installed and run by MCP clients through
+local stdio, the documented runtime artifacts can be resolved, the core tools
+and resources work against real project artifacts, diagnostics and generated
+resource links are understandable, and the README / contract documents are
+sufficient for normal local use. Until those conditions are met, `packages/java/`
+remains a reserved directory and Java MCP work should be limited to planning or
+contract review.
 
 If the `mikuproject-java` CLI supports a wider operation range than the Node.js `mikuproject` CLI, the first `mikuproject-mcp` core tool set should still stay within the operation range supported by the Node.js CLI and the Java CLI in common. Java-only operations should be treated as later optional, capability-gated extensions rather than as part of the first core MCP contract.
 

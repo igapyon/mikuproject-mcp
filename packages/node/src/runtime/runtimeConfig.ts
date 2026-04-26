@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export type RuntimeConfig = {
   javaJarPath?: string;
@@ -15,11 +16,18 @@ export function resolveRuntimeConfig(cwd = process.cwd()): RuntimeConfig {
   const configuredJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
   const configuredNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
 
-  const bundledJava = resolve(cwd, "runtime/mikuproject-java/mikuproject.jar");
-  const bundledNode = resolve(cwd, "runtime/mikuproject-node/mikuproject.mjs");
+  const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+  const bundledJava = firstExistingPath([
+    resolve(cwd, "runtime/mikuproject-java/mikuproject.jar"),
+    resolve(packageRoot, "runtime/mikuproject-java/mikuproject.jar")
+  ]);
+  const bundledNode = firstExistingPath([
+    resolve(cwd, "runtime/mikuproject-node/mikuproject.mjs"),
+    resolve(packageRoot, "runtime/mikuproject-node/mikuproject.mjs")
+  ]);
 
-  const javaJarPath = configuredJava || (existsSync(bundledJava) ? bundledJava : undefined);
-  const nodeCliPath = configuredNode || (existsSync(bundledNode) ? bundledNode : undefined);
+  const javaJarPath = configuredJava || (configuredNode ? undefined : bundledJava);
+  const nodeCliPath = configuredNode || bundledNode;
 
   const diagnostics: RuntimeConfig["diagnostics"] = [];
 
@@ -52,4 +60,8 @@ export function resolveRuntimeConfig(cwd = process.cwd()): RuntimeConfig {
     nodeCliPath,
     diagnostics
   };
+}
+
+function firstExistingPath(paths: string[]): string | undefined {
+  return paths.find((path) => existsSync(path));
 }

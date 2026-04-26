@@ -37,7 +37,7 @@
       "items": {
         "type": "object",
         "additionalProperties": true,
-        "required": ["role", "uri"],
+        "required": ["role"],
         "properties": {
           "role": {
             "type": "string"

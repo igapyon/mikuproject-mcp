@@ -15,6 +15,8 @@ workspace policy, storage policy, and runtime adapter code.
 - [x] Avoid MCP-local reimplementation of upstream conversion logic.
 - [x] Sequence implementation as Node.js / TypeScript first, then Java MCP only
       after the Node version has been validated in local stdio use.
+- [x] Release and operate the Node MCP server first; start Java MCP only after
+      stable Node release operation is observed.
 
 ## Before Implementation
 
@@ -124,11 +126,13 @@ workflow is stable.
 - Java MCP implementation is planned after Node MCP validation. Do not start the
   Java server until the Node server has been exercised enough to confirm the MCP
   contract and local stdio behavior.
+- Java MCP implementation is gated on a released Node version with stable local
+  stdio operation. Until then, Java MCP work is planning and contract review
+  only.
 - Continue with schema validation tests, artifact role naming tests, and resource
   support for current/saved workbook state.
-- Java and Node runtime artifacts are present under `runtime/`, but the policy
-  for version-controlling runtime artifacts and paired `*-sources.*` files still
-  needs a deliberate decision.
+- Runtime artifact policy is decided: keep paired `*-sources.*` traceability
+  artifacts under `runtime/` next to the executable artifacts they describe.
 - Java `phase-detail` compatibility was updated upstream and the MCP adapter now
   uses `--root-task-uid` plus the IPv4 JVM options from the Java upstream
   `.mvn/jvm.config`.
@@ -233,3 +237,24 @@ workflow is stable.
 - [x] Consider HTTP transport only after session identity, workspace isolation,
       authentication, storage policy, upload lifecycle, artifact lifecycle, size
       limits, cleanup, audit, and runtime isolation are explicitly designed.
+
+## Release Readiness
+
+Before treating the Node.js MCP server as a releasable package:
+
+- [x] Rewrite `README.md` to the level needed for real local use:
+      installation, build, MCP client configuration, runtime artifact placement,
+      environment variables, workspace/output behavior, tool/resource/prompt
+      overview, diagnostics, security notes, and Java-after-Node release order.
+- [x] Add a stdio E2E test that starts the built server process and exercises
+      MCP initialize, tool listing, resource access, prompt listing, and at least
+      one tool call over stdio.
+- [x] Fix the consistency between custom `outputPath` values and returned
+      resource URIs. A resource URI must either point to the generated artifact
+      it names, or the result must return only a path/file artifact when the
+      output location is custom.
+- [x] Prepare package metadata for publishing:
+      package name, version policy, `private` flag decision, `bin`, `files`,
+      README linkage, license metadata, and publish command policy.
+- [x] Verify the server with MCP Inspector after build and record the result,
+      including any client-compatibility notes.

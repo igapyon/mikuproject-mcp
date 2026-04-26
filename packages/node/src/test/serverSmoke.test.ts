@@ -783,6 +783,58 @@ describe("MCP server smoke", () => {
     }
   });
 
+  it("does not return a fixed resource URI for a custom outputPath", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-custom-output-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const workspacePath = join(tempRoot, "workspace");
+    const workbookPath = join(tempRoot, "workbook.json");
+    const customOutputPath = join(tempRoot, "custom", "workbook.json");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';",
+        "import { dirname } from 'node:path';",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'export workbook-json --in ' + args[3] + ' --out ' + args[5]) {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "const workbook = JSON.parse(readFileSync(args[3], 'utf8'));",
+        "mkdirSync(dirname(args[5]), { recursive: true });",
+        "writeFileSync(args[5], JSON.stringify({ kind: 'mikuproject_workbook_json', custom: true, project: workbook.project }, null, 2));"
+      ].join("\n")
+    );
+    writeFileSync(workbookPath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Custom" } }));
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const parsed = await callJsonTool(fixture.client, "mikuproject.export_workbook_json", {
+        workbookPath,
+        outputPath: customOutputPath
+      });
+
+      assert.equal(parsed.ok, true);
+      assert.equal(parsed.artifacts[0].role, "mikuproject_workbook_json");
+      assert.equal(parsed.artifacts[0].path, customOutputPath);
+      assert.equal(parsed.artifacts[0].uri, undefined);
+      assert.equal(JSON.parse(readFileSync(customOutputPath, "utf8")).custom, true);
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
+    }
+  });
+
   it("calls file import/export and report tools", async () => {
     const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-file-report-"));
     const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
