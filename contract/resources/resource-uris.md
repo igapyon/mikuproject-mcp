@@ -9,6 +9,12 @@ Initial resource URI conventions:
 - `mikuproject://export/project-xml`
 - `mikuproject://export/project-xlsx`
 - `mikuproject://projection/{name}`
+- `mikuproject://projection/bundle`
+- `mikuproject://report/wbs-xlsx`
+- `mikuproject://report/daily-svg`
+- `mikuproject://report/weekly-svg`
+- `mikuproject://report/monthly-calendar-svg`
+- `mikuproject://report/all`
 - `mikuproject://report/wbs-markdown`
 - `mikuproject://report/mermaid`
 - `mikuproject://summary/{operationId}`

@@ -1,7 +1,7 @@
 # TODO
 
 This repository is the MCP server layer described in
-`docs/miku-soft-50-mcp-design-v20260427.md`.
+`docs/miku-soft-50-mcp-design-v20260429.md`.
 
 The semantic center remains upstream `mikuproject`. This repository owns the MCP
 entrypoints, tool/resource/prompt definitions, schemas, transport handling,
@@ -18,7 +18,7 @@ workspace policy, storage policy, and runtime adapter code.
 
 ## Before Implementation
 
-- [x] Keep `docs/miku-soft-50-mcp-design-v20260427.md` as the current MCP design
+- [x] Keep `docs/miku-soft-50-mcp-design-v20260429.md` as the current MCP design
       document.
 - [x] Fix initial implementation parameters:
   - [x] package manager: `npm`
@@ -114,6 +114,48 @@ Implement product-prefixed tools with JSON Schema input and structured results.
 
 File import/export and report generation should wait until the core state
 workflow is stable.
+
+## Phase C Report Tool Additions
+
+Add the report / presentation operations requested by `mikuproject-skills` so
+CLI backend and MCP backend coverage can stay aligned for Phase C workflows.
+
+Requested CLI-to-MCP mapping:
+
+- [x] `report wbs-xlsx` -> `mikuproject.report_wbs_xlsx`
+- [x] `report daily-svg` -> `mikuproject.report_daily_svg`
+- [x] `report weekly-svg` -> `mikuproject.report_weekly_svg`
+- [x] `report monthly-calendar-svg` ->
+      `mikuproject.report_monthly_calendar_svg`
+- [x] `report all` -> `mikuproject.report_all`
+
+Implementation tasks:
+
+- [x] Add input JSON Schemas under `contract/tools/` for the five new report
+      tools.
+- [x] Update `packages/node/src/contract/toolSchemas.ts` so schema loading and
+      validation includes the new tool names.
+- [x] Update the runtime CLI mapping and fixed-argument dispatch in
+      `packages/node/src/runtime/runtimeOperation.ts`.
+- [x] Register the MCP tools in `packages/node/src/tools/registerTools.ts` with
+      default output paths under the configured workspace.
+- [x] Add resource URIs and resource readers for default outputs where useful:
+      WBS XLSX, daily SVG, weekly SVG, monthly calendar SVG archive, and report
+      bundle.
+- [x] Keep `mikuproject.report_wbs_xlsx` separate from
+      `mikuproject.export_xlsx`; the former is WBS report XLSX, while the latter
+      is structural workbook XLSX export.
+- [x] Preserve report artifacts as `report_output` or another explicitly
+      documented report artifact role, not as `xlsx_workbook`.
+- [x] Update `contract/runtime-cli-mapping.md` with Java and Node CLI mappings
+      and note whether each operation is core or capability-gated.
+- [x] Confirm the bundled Java runtime and bundled Node runtime both support the
+      five operations, or document any runtime-specific capability behavior.
+- [x] Add runtime operation mapping tests.
+- [x] Add JSON Schema validation samples.
+- [x] Extend MCP server smoke tests for tool listing and representative report
+      calls.
+- [x] Update README tool/resource lists after implementation.
 
 ## Resume Notes
 
@@ -265,13 +307,15 @@ When this work is resumed:
 - [ ] Confirm the npm account can publish under the `@igapyon` scope.
 - [ ] Confirm the public package name:
       `@igapyon/mikuproject-mcp-node`.
-- [ ] Confirm the final package version in `packages/node/package.json`.
+- [x] Confirm the final package version in `packages/node/package.json`.
+      Version policy: align the MCP package version with the bundled Node.js
+      `mikuproject` CLI runtime version by default.
 - [ ] Confirm that bundling runtime artifacts in the npm package is acceptable
       for license, size, update, and traceability policy.
-- [ ] Run the final local verification:
+- [x] Run the final local verification:
       `npm run build`
       `npm run test`
-- [ ] Review the package contents before publishing:
+- [x] Review the package contents before publishing:
       `npm --workspace packages/node pack --dry-run`
 - [ ] Publish the scoped package publicly only after the above items are clear:
       `npm publish --workspace packages/node --access public`

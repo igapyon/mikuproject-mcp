@@ -8,6 +8,32 @@ import { runRuntimeOperation } from "../runtime/runtimeOperation.js";
 import { ensureParentDirectory, ensureWorkspace, resolveWorkspaceConfig } from "../workspace/workspace.js";
 
 export function registerMikuprojectTools(server: McpServer): void {
+  server.registerTool(
+    "mikuproject.version",
+    {
+      title: "Get mikuproject runtime version",
+      description: "Returns the configured mikuproject runtime version.",
+      inputSchema: {},
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.version")
+      }
+    },
+    async () => {
+      const runtimeResult = await runRuntimeOperation({
+        name: "version"
+      });
+
+      return asPersistedTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.version",
+        diagnostics: runtimeResult.diagnostics,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
+
   server.registerTool("mikuproject.ai_spec", {
     title: "Get mikuproject AI specification",
     description: "Returns the MCP-facing AI specification resource reference for mikuproject.",
@@ -161,6 +187,54 @@ export function registerMikuprojectTools(server: McpServer): void {
         artifacts: runtimeResult.ok
           ? [
               artifactRef("projection", overviewOutputPath, defaultOverviewOutputPath, "mikuproject://projection/project-overview")
+            ]
+          : undefined,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
+
+  server.registerTool(
+    "mikuproject.ai_export_bundle",
+    {
+      title: "Export mikuproject AI bundle",
+      description: "Exports an AI-facing bundle projection from a mikuproject workbook JSON state.",
+      inputSchema: {
+        workbookPath: z.string().min(1),
+        outputPath: z.string().min(1).optional()
+      },
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.ai_export_bundle")
+      }
+    },
+    async ({ workbookPath, outputPath }) => {
+      const workspace = resolveWorkspaceConfig();
+      ensureWorkspace(workspace);
+      const defaultBundleOutputPath = `${workspace.root}/mikuproject/projection/bundle.editjson`;
+      const bundleOutputPath = outputPath || defaultBundleOutputPath;
+      ensureParentDirectory(bundleOutputPath);
+      const runtimeResult = await runRuntimeOperation({
+        name: "ai_export_bundle",
+        workbookPath,
+        outputPath: bundleOutputPath
+      });
+
+      return asPersistedTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.ai_export_bundle",
+        diagnostics: runtimeResult.diagnostics,
+        input: {
+          workbookPath,
+          outputPath: bundleOutputPath
+        },
+        workspace: {
+          root: workspace.root
+        },
+        artifacts: runtimeResult.ok
+          ? [
+              artifactRef("projection", bundleOutputPath, defaultBundleOutputPath, "mikuproject://projection/bundle")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,
@@ -617,6 +691,246 @@ export function registerMikuprojectTools(server: McpServer): void {
         artifacts: runtimeResult.ok
           ? [
               artifactRef("workbook_state", stateOutputPath, defaultStateOutputPath, "mikuproject://state/imported-workbook")
+            ]
+          : undefined,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
+
+  server.registerTool(
+    "mikuproject.report_wbs_xlsx",
+    {
+      title: "Generate mikuproject WBS XLSX report",
+      description: "Generates a WBS XLSX report from a mikuproject workbook JSON state.",
+      inputSchema: {
+        workbookPath: z.string().min(1),
+        outputPath: z.string().min(1).optional()
+      },
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.report_wbs_xlsx")
+      }
+    },
+    async ({ workbookPath, outputPath }) => {
+      const workspace = resolveWorkspaceConfig();
+      ensureWorkspace(workspace);
+      const defaultReportOutputPath = `${workspace.root}/mikuproject/report/wbs.xlsx`;
+      const reportOutputPath = outputPath || defaultReportOutputPath;
+      ensureParentDirectory(reportOutputPath);
+      const runtimeResult = await runRuntimeOperation({
+        name: "report_wbs_xlsx",
+        workbookPath,
+        outputPath: reportOutputPath
+      });
+
+      return asPersistedTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.report_wbs_xlsx",
+        diagnostics: runtimeResult.diagnostics,
+        input: {
+          workbookPath,
+          outputPath: reportOutputPath
+        },
+        workspace: {
+          root: workspace.root
+        },
+        artifacts: runtimeResult.ok
+          ? [
+              artifactRef("report_output", reportOutputPath, defaultReportOutputPath, "mikuproject://report/wbs-xlsx")
+            ]
+          : undefined,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
+
+  server.registerTool(
+    "mikuproject.report_daily_svg",
+    {
+      title: "Generate mikuproject daily SVG report",
+      description: "Generates a daily SVG report from a mikuproject workbook JSON state.",
+      inputSchema: {
+        workbookPath: z.string().min(1),
+        outputPath: z.string().min(1).optional()
+      },
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.report_daily_svg")
+      }
+    },
+    async ({ workbookPath, outputPath }) => {
+      const workspace = resolveWorkspaceConfig();
+      ensureWorkspace(workspace);
+      const defaultReportOutputPath = `${workspace.root}/mikuproject/report/daily.svg`;
+      const reportOutputPath = outputPath || defaultReportOutputPath;
+      ensureParentDirectory(reportOutputPath);
+      const runtimeResult = await runRuntimeOperation({
+        name: "report_daily_svg",
+        workbookPath,
+        outputPath: reportOutputPath
+      });
+
+      return asPersistedTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.report_daily_svg",
+        diagnostics: runtimeResult.diagnostics,
+        input: {
+          workbookPath,
+          outputPath: reportOutputPath
+        },
+        workspace: {
+          root: workspace.root
+        },
+        artifacts: runtimeResult.ok
+          ? [
+              artifactRef("report_output", reportOutputPath, defaultReportOutputPath, "mikuproject://report/daily-svg")
+            ]
+          : undefined,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
+
+  server.registerTool(
+    "mikuproject.report_weekly_svg",
+    {
+      title: "Generate mikuproject weekly SVG report",
+      description: "Generates a weekly SVG report from a mikuproject workbook JSON state.",
+      inputSchema: {
+        workbookPath: z.string().min(1),
+        outputPath: z.string().min(1).optional()
+      },
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.report_weekly_svg")
+      }
+    },
+    async ({ workbookPath, outputPath }) => {
+      const workspace = resolveWorkspaceConfig();
+      ensureWorkspace(workspace);
+      const defaultReportOutputPath = `${workspace.root}/mikuproject/report/weekly.svg`;
+      const reportOutputPath = outputPath || defaultReportOutputPath;
+      ensureParentDirectory(reportOutputPath);
+      const runtimeResult = await runRuntimeOperation({
+        name: "report_weekly_svg",
+        workbookPath,
+        outputPath: reportOutputPath
+      });
+
+      return asPersistedTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.report_weekly_svg",
+        diagnostics: runtimeResult.diagnostics,
+        input: {
+          workbookPath,
+          outputPath: reportOutputPath
+        },
+        workspace: {
+          root: workspace.root
+        },
+        artifacts: runtimeResult.ok
+          ? [
+              artifactRef("report_output", reportOutputPath, defaultReportOutputPath, "mikuproject://report/weekly-svg")
+            ]
+          : undefined,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
+
+  server.registerTool(
+    "mikuproject.report_monthly_calendar_svg",
+    {
+      title: "Generate mikuproject monthly calendar SVG archive",
+      description: "Generates a monthly calendar SVG archive from a mikuproject workbook JSON state.",
+      inputSchema: {
+        workbookPath: z.string().min(1),
+        outputPath: z.string().min(1).optional()
+      },
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.report_monthly_calendar_svg")
+      }
+    },
+    async ({ workbookPath, outputPath }) => {
+      const workspace = resolveWorkspaceConfig();
+      ensureWorkspace(workspace);
+      const defaultReportOutputPath = `${workspace.root}/mikuproject/report/monthly-calendar-svg.zip`;
+      const reportOutputPath = outputPath || defaultReportOutputPath;
+      ensureParentDirectory(reportOutputPath);
+      const runtimeResult = await runRuntimeOperation({
+        name: "report_monthly_calendar_svg",
+        workbookPath,
+        outputPath: reportOutputPath
+      });
+
+      return asPersistedTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.report_monthly_calendar_svg",
+        diagnostics: runtimeResult.diagnostics,
+        input: {
+          workbookPath,
+          outputPath: reportOutputPath
+        },
+        workspace: {
+          root: workspace.root
+        },
+        artifacts: runtimeResult.ok
+          ? [
+              artifactRef("report_output", reportOutputPath, defaultReportOutputPath, "mikuproject://report/monthly-calendar-svg")
+            ]
+          : undefined,
+        stdout: runtimeResult.stdout || undefined,
+        stderr: runtimeResult.stderr || undefined,
+        exitCode: runtimeResult.exitCode
+      });
+    }
+  );
+
+  server.registerTool(
+    "mikuproject.report_all",
+    {
+      title: "Generate mikuproject report bundle",
+      description: "Generates a report bundle from a mikuproject workbook JSON state.",
+      inputSchema: {
+        workbookPath: z.string().min(1),
+        outputPath: z.string().min(1).optional()
+      },
+      _meta: {
+        contractInputSchema: loadToolInputSchema("mikuproject.report_all")
+      }
+    },
+    async ({ workbookPath, outputPath }) => {
+      const workspace = resolveWorkspaceConfig();
+      ensureWorkspace(workspace);
+      const defaultReportOutputPath = `${workspace.root}/mikuproject/report/report-bundle.zip`;
+      const reportOutputPath = outputPath || defaultReportOutputPath;
+      ensureParentDirectory(reportOutputPath);
+      const runtimeResult = await runRuntimeOperation({
+        name: "report_all",
+        workbookPath,
+        outputPath: reportOutputPath
+      });
+
+      return asPersistedTextResult({
+        ok: runtimeResult.ok,
+        operation: "mikuproject.report_all",
+        diagnostics: runtimeResult.diagnostics,
+        input: {
+          workbookPath,
+          outputPath: reportOutputPath
+        },
+        workspace: {
+          root: workspace.root
+        },
+        artifacts: runtimeResult.ok
+          ? [
+              artifactRef("report_output", reportOutputPath, defaultReportOutputPath, "mikuproject://report/all")
             ]
           : undefined,
         stdout: runtimeResult.stdout || undefined,

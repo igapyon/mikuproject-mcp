@@ -5,6 +5,7 @@ import { buildRuntimeArgs, selectRuntimeCommand } from "../runtime/runtimeOperat
 
 describe("runtime operation mapping", () => {
   it("builds fixed CLI args for initial core operations", () => {
+    assert.deepEqual(buildRuntimeArgs({ name: "version" }), ["--version"]);
     assert.deepEqual(buildRuntimeArgs({ name: "ai_spec" }), ["ai", "spec"]);
     assert.deepEqual(buildRuntimeArgs({ name: "ai_detect_kind", inputPath: "document.json" }), [
       "ai",
@@ -27,6 +28,14 @@ describe("runtime operation mapping", () => {
         outputPath: "overview.editjson"
       }),
       ["ai", "export", "project-overview", "--in", "workbook.json", "--out", "overview.editjson"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "ai_export_bundle",
+        workbookPath: "workbook.json",
+        outputPath: "bundle.editjson"
+      }),
+      ["ai", "export", "bundle", "--in", "workbook.json", "--out", "bundle.editjson"]
     );
     assert.deepEqual(
       buildRuntimeArgs({
@@ -128,6 +137,46 @@ describe("runtime operation mapping", () => {
         outputPath: "workbook.json"
       }),
       ["import", "xlsx", "--in", "project.xlsx", "--out", "workbook.json"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "report_wbs_xlsx",
+        workbookPath: "workbook.json",
+        outputPath: "wbs.xlsx"
+      }),
+      ["report", "wbs-xlsx", "--in", "workbook.json", "--out", "wbs.xlsx"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "report_daily_svg",
+        workbookPath: "workbook.json",
+        outputPath: "daily.svg"
+      }),
+      ["report", "daily-svg", "--in", "workbook.json", "--out", "daily.svg"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "report_weekly_svg",
+        workbookPath: "workbook.json",
+        outputPath: "weekly.svg"
+      }),
+      ["report", "weekly-svg", "--in", "workbook.json", "--out", "weekly.svg"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "report_monthly_calendar_svg",
+        workbookPath: "workbook.json",
+        outputPath: "monthly-calendar-svg.zip"
+      }),
+      ["report", "monthly-calendar-svg", "--in", "workbook.json", "--out", "monthly-calendar-svg.zip"]
+    );
+    assert.deepEqual(
+      buildRuntimeArgs({
+        name: "report_all",
+        workbookPath: "workbook.json",
+        outputPath: "report-bundle.zip"
+      }),
+      ["report", "all", "--in", "workbook.json", "--out", "report-bundle.zip"]
     );
     assert.deepEqual(
       buildRuntimeArgs({

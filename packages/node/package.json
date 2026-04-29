@@ -1,6 +1,6 @@
 {
   "name": "@igapyon/mikuproject-mcp-node",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "description": "Local stdio MCP server adapter for mikuproject.",
   "private": false,
   "license": "Apache-2.0",

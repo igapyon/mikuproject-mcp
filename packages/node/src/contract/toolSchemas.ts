@@ -4,10 +4,12 @@ import { loadJsonFile } from "./loadJson.js";
 export type JsonSchema = Record<string, unknown>;
 
 const toolSchemaFiles = {
+  "mikuproject.version": "mikuproject.version.input.schema.json",
   "mikuproject.ai_spec": "mikuproject.ai_spec.input.schema.json",
   "mikuproject.ai_detect_kind": "mikuproject.ai_detect_kind.input.schema.json",
   "mikuproject.state_from_draft": "mikuproject.state_from_draft.input.schema.json",
   "mikuproject.ai_export_project_overview": "mikuproject.ai_export_project_overview.input.schema.json",
+  "mikuproject.ai_export_bundle": "mikuproject.ai_export_bundle.input.schema.json",
   "mikuproject.ai_export_task_edit": "mikuproject.ai_export_task_edit.input.schema.json",
   "mikuproject.ai_export_phase_detail": "mikuproject.ai_export_phase_detail.input.schema.json",
   "mikuproject.ai_validate_patch": "mikuproject.ai_validate_patch.input.schema.json",
@@ -18,6 +20,11 @@ const toolSchemaFiles = {
   "mikuproject.export_xml": "mikuproject.export_xml.input.schema.json",
   "mikuproject.export_xlsx": "mikuproject.export_xlsx.input.schema.json",
   "mikuproject.import_xlsx": "mikuproject.import_xlsx.input.schema.json",
+  "mikuproject.report_wbs_xlsx": "mikuproject.report_wbs_xlsx.input.schema.json",
+  "mikuproject.report_daily_svg": "mikuproject.report_daily_svg.input.schema.json",
+  "mikuproject.report_weekly_svg": "mikuproject.report_weekly_svg.input.schema.json",
+  "mikuproject.report_monthly_calendar_svg": "mikuproject.report_monthly_calendar_svg.input.schema.json",
+  "mikuproject.report_all": "mikuproject.report_all.input.schema.json",
   "mikuproject.report_wbs_markdown": "mikuproject.report_wbs_markdown.input.schema.json",
   "mikuproject.report_mermaid": "mikuproject.report_mermaid.input.schema.json"
 } as const;
@@ -30,10 +37,12 @@ export function loadToolInputSchema(toolName: ContractToolName): JsonSchema {
 
 export function loadInitialToolInputSchemas(): Record<ContractToolName, JsonSchema> {
   return {
+    "mikuproject.version": loadToolInputSchema("mikuproject.version"),
     "mikuproject.ai_spec": loadToolInputSchema("mikuproject.ai_spec"),
     "mikuproject.ai_detect_kind": loadToolInputSchema("mikuproject.ai_detect_kind"),
     "mikuproject.state_from_draft": loadToolInputSchema("mikuproject.state_from_draft"),
     "mikuproject.ai_export_project_overview": loadToolInputSchema("mikuproject.ai_export_project_overview"),
+    "mikuproject.ai_export_bundle": loadToolInputSchema("mikuproject.ai_export_bundle"),
     "mikuproject.ai_export_task_edit": loadToolInputSchema("mikuproject.ai_export_task_edit"),
     "mikuproject.ai_export_phase_detail": loadToolInputSchema("mikuproject.ai_export_phase_detail"),
     "mikuproject.ai_validate_patch": loadToolInputSchema("mikuproject.ai_validate_patch"),
@@ -44,6 +53,11 @@ export function loadInitialToolInputSchemas(): Record<ContractToolName, JsonSche
     "mikuproject.export_xml": loadToolInputSchema("mikuproject.export_xml"),
     "mikuproject.export_xlsx": loadToolInputSchema("mikuproject.export_xlsx"),
     "mikuproject.import_xlsx": loadToolInputSchema("mikuproject.import_xlsx"),
+    "mikuproject.report_wbs_xlsx": loadToolInputSchema("mikuproject.report_wbs_xlsx"),
+    "mikuproject.report_daily_svg": loadToolInputSchema("mikuproject.report_daily_svg"),
+    "mikuproject.report_weekly_svg": loadToolInputSchema("mikuproject.report_weekly_svg"),
+    "mikuproject.report_monthly_calendar_svg": loadToolInputSchema("mikuproject.report_monthly_calendar_svg"),
+    "mikuproject.report_all": loadToolInputSchema("mikuproject.report_all"),
     "mikuproject.report_wbs_markdown": loadToolInputSchema("mikuproject.report_wbs_markdown"),
     "mikuproject.report_mermaid": loadToolInputSchema("mikuproject.report_mermaid")
   };

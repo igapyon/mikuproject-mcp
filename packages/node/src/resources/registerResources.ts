@@ -143,6 +143,67 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
+    "mikuproject.report_wbs_xlsx",
+    "mikuproject://report/wbs-xlsx",
+    {
+      title: "mikuproject WBS XLSX report",
+      description: "Generated WBS XLSX report in the configured mikuproject MCP workspace.",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    async () => readBlobResource("mikuproject://report/wbs-xlsx", reportPath("wbs.xlsx"), "report_artifact_not_found", "report artifact")
+  );
+
+  server.registerResource(
+    "mikuproject.report_daily_svg",
+    "mikuproject://report/daily-svg",
+    {
+      title: "mikuproject daily SVG report",
+      description: "Generated daily SVG report in the configured mikuproject MCP workspace.",
+      mimeType: "image/svg+xml"
+    },
+    async () => readTextResource("mikuproject://report/daily-svg", reportPath("daily.svg"), "image/svg+xml", "report_artifact_not_found", "report artifact")
+  );
+
+  server.registerResource(
+    "mikuproject.report_weekly_svg",
+    "mikuproject://report/weekly-svg",
+    {
+      title: "mikuproject weekly SVG report",
+      description: "Generated weekly SVG report in the configured mikuproject MCP workspace.",
+      mimeType: "image/svg+xml"
+    },
+    async () => readTextResource("mikuproject://report/weekly-svg", reportPath("weekly.svg"), "image/svg+xml", "report_artifact_not_found", "report artifact")
+  );
+
+  server.registerResource(
+    "mikuproject.report_monthly_calendar_svg",
+    "mikuproject://report/monthly-calendar-svg",
+    {
+      title: "mikuproject monthly calendar SVG archive",
+      description: "Generated monthly calendar SVG archive in the configured mikuproject MCP workspace.",
+      mimeType: "application/zip"
+    },
+    async () =>
+      readBlobResource(
+        "mikuproject://report/monthly-calendar-svg",
+        reportPath("monthly-calendar-svg.zip"),
+        "report_artifact_not_found",
+        "report artifact"
+      )
+  );
+
+  server.registerResource(
+    "mikuproject.report_all",
+    "mikuproject://report/all",
+    {
+      title: "mikuproject report bundle",
+      description: "Generated report bundle in the configured mikuproject MCP workspace.",
+      mimeType: "application/zip"
+    },
+    async () => readBlobResource("mikuproject://report/all", reportPath("report-bundle.zip"), "report_artifact_not_found", "report artifact")
+  );
+
+  server.registerResource(
     "mikuproject.report_wbs_markdown",
     "mikuproject://report/wbs-markdown",
     {
@@ -299,6 +360,22 @@ function readJsonResource(uri: string, path: string, notFoundCode: string, artif
       {
         uri,
         mimeType: "application/json",
+        text: readFileSync(path, "utf8")
+      }
+    ]
+  };
+}
+
+function readTextResource(uri: string, path: string, mimeType: string, notFoundCode: string, artifactLabel: string) {
+  if (!existsSync(path)) {
+    return readJsonResource(uri, path, notFoundCode, artifactLabel);
+  }
+
+  return {
+    contents: [
+      {
+        uri,
+        mimeType,
         text: readFileSync(path, "utf8")
       }
     ]

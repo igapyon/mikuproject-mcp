@@ -16,6 +16,7 @@ tokens become snake_case.
 
 Examples:
 
+- `--version` -> `mikuproject.version`
 - `ai spec` -> `mikuproject.ai_spec`
 - `ai detect-kind` -> `mikuproject.ai_detect_kind`
 - `state from-draft` -> `mikuproject.state_from_draft`
@@ -31,10 +32,12 @@ Java CLI, tests, diagnostics, and Agent Skills documentation traceable.
 
 | MCP tool | Node.js CLI | Java CLI | Core |
 | --- | --- | --- | --- |
+| `mikuproject.version` | `node mikuproject.mjs --version` | `java -jar mikuproject.jar --version` | yes |
 | `mikuproject.ai_spec` | `node mikuproject.mjs ai spec` | `java -jar mikuproject.jar ai spec` | yes |
 | `mikuproject.ai_detect_kind` | `node mikuproject.mjs ai detect-kind --in <path>` | `java -jar mikuproject.jar ai detect-kind --in <path>` | yes |
 | `mikuproject.state_from_draft` | `node mikuproject.mjs state from-draft --in <draft> --out <workbook>` | `java -jar mikuproject.jar state from-draft --in <draft> --out <workbook>` | yes |
 | `mikuproject.ai_export_project_overview` | `node mikuproject.mjs ai export project-overview --in <workbook> --out <overview>` | `java -jar mikuproject.jar ai export project-overview --in <workbook> --out <overview>` | yes |
+| `mikuproject.ai_export_bundle` | `node mikuproject.mjs ai export bundle --in <workbook> --out <bundle>` | `java -jar mikuproject.jar ai export bundle --in <workbook> --out <bundle>` | yes |
 | `mikuproject.ai_export_task_edit` | `node mikuproject.mjs ai export task-edit --in <workbook> --task-uid <uid> --out <view>` | `java -jar mikuproject.jar ai export task-edit --in <workbook> --task-uid <uid> --out <view>` | yes |
 | `mikuproject.ai_export_phase_detail` | `node mikuproject.mjs ai export phase-detail --in <workbook> --phase-uid <uid> --mode <scoped\|full> --root-task-uid <uid> --max-depth <n> --out <view>` | `java -jar mikuproject.jar ai export phase-detail --in <workbook> --phase-uid <uid> --mode <scoped\|full> --root-task-uid <uid> --max-depth <n> --out <view>` | yes |
 | `mikuproject.ai_validate_patch` | `node mikuproject.mjs ai validate-patch --state <workbook> --in <patch> --diagnostics json` | `java -jar mikuproject.jar ai validate-patch --state <workbook> --in <patch>` | yes |
@@ -45,8 +48,18 @@ Java CLI, tests, diagnostics, and Agent Skills documentation traceable.
 | `mikuproject.export_xml` | `node mikuproject.mjs export xml --in <workbook> --out <project.xml>` | `java -jar mikuproject.jar export xml --in <workbook> --out <project.xml>` | yes |
 | `mikuproject.export_xlsx` | `node mikuproject.mjs export xlsx --in <workbook> --out <project.xlsx>` | `java -jar mikuproject.jar export xlsx --in <workbook> --out <project.xlsx>` | yes |
 | `mikuproject.import_xlsx` | `node mikuproject.mjs import xlsx --in <project.xlsx> --out <workbook>` | `java -jar mikuproject.jar import xlsx --in <project.xlsx> --out <workbook>` | yes |
+| `mikuproject.report_wbs_xlsx` | `node mikuproject.mjs report wbs-xlsx --in <workbook> --out <report.xlsx>` | `java -jar mikuproject.jar report wbs-xlsx --in <workbook> --out <report.xlsx>` | yes |
+| `mikuproject.report_daily_svg` | `node mikuproject.mjs report daily-svg --in <workbook> --out <report.svg>` | `java -jar mikuproject.jar report daily-svg --in <workbook> --out <report.svg>` | yes |
+| `mikuproject.report_weekly_svg` | `node mikuproject.mjs report weekly-svg --in <workbook> --out <report.svg>` | `java -jar mikuproject.jar report weekly-svg --in <workbook> --out <report.svg>` | yes |
+| `mikuproject.report_monthly_calendar_svg` | `node mikuproject.mjs report monthly-calendar-svg --in <workbook> --out <report.zip>` | `java -jar mikuproject.jar report monthly-calendar-svg --in <workbook> --out <report.zip>` | yes |
+| `mikuproject.report_all` | `node mikuproject.mjs report all --in <workbook> --out <report-bundle.zip>` | `java -jar mikuproject.jar report all --in <workbook> --out <report-bundle.zip>` | yes |
 | `mikuproject.report_wbs_markdown` | `node mikuproject.mjs report wbs-markdown --in <workbook> --out <report.md>` | `java -jar mikuproject.jar report wbs-markdown --in <workbook> --out <report.md>` | yes |
 | `mikuproject.report_mermaid` | `node mikuproject.mjs report mermaid --in <workbook> --out <report.mmd>` | `java -jar mikuproject.jar report mermaid --in <workbook> --out <report.mmd>` | yes |
+
+The report operations are core MCP tools when the configured runtime advertises
+the corresponding CLI commands. The bundled Java and Node runtime artifacts were
+checked with `--help` on 2026-04-29 and both list `report wbs-xlsx`, `report
+daily-svg`, `report weekly-svg`, `report monthly-calendar-svg`, and `report all`.
 
 ## Runtime Artifacts
 

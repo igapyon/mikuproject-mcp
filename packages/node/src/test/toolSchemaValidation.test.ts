@@ -5,6 +5,7 @@ import { Ajv2020 } from "ajv/dist/2020.js";
 import { loadInitialToolInputSchemas, type ContractToolName } from "../contract/toolSchemas.js";
 
 const validSamples: Record<ContractToolName, Record<string, unknown>> = {
+  "mikuproject.version": {},
   "mikuproject.ai_spec": {},
   "mikuproject.ai_detect_kind": {
     path: "document.json"
@@ -13,6 +14,9 @@ const validSamples: Record<ContractToolName, Record<string, unknown>> = {
     draftPath: "draft.editjson"
   },
   "mikuproject.ai_export_project_overview": {
+    workbookPath: "workbook.json"
+  },
+  "mikuproject.ai_export_bundle": {
     workbookPath: "workbook.json"
   },
   "mikuproject.ai_export_task_edit": {
@@ -52,6 +56,21 @@ const validSamples: Record<ContractToolName, Record<string, unknown>> = {
   },
   "mikuproject.import_xlsx": {
     inputPath: "project.xlsx"
+  },
+  "mikuproject.report_wbs_xlsx": {
+    workbookPath: "workbook.json"
+  },
+  "mikuproject.report_daily_svg": {
+    workbookPath: "workbook.json"
+  },
+  "mikuproject.report_weekly_svg": {
+    workbookPath: "workbook.json"
+  },
+  "mikuproject.report_monthly_calendar_svg": {
+    workbookPath: "workbook.json"
+  },
+  "mikuproject.report_all": {
+    workbookPath: "workbook.json"
   },
   "mikuproject.report_wbs_markdown": {
     workbookPath: "workbook.json"

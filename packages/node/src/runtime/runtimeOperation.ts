@@ -11,6 +11,9 @@ const javaNetworkArgs = ["-Djava.net.preferIPv4Stack=true", "-Djava.net.preferIP
 
 export type RuntimeOperation =
   | {
+      name: "version";
+    }
+  | {
       name: "ai_spec";
     }
   | {
@@ -24,6 +27,11 @@ export type RuntimeOperation =
     }
   | {
       name: "ai_export_project_overview";
+      workbookPath: string;
+      outputPath: string;
+    }
+  | {
+      name: "ai_export_bundle";
       workbookPath: string;
       outputPath: string;
     }
@@ -78,7 +86,14 @@ export type RuntimeOperation =
       outputPath: string;
     }
   | {
-      name: "report_wbs_markdown" | "report_mermaid";
+      name:
+        | "report_wbs_xlsx"
+        | "report_daily_svg"
+        | "report_weekly_svg"
+        | "report_monthly_calendar_svg"
+        | "report_all"
+        | "report_wbs_markdown"
+        | "report_mermaid";
       workbookPath: string;
       outputPath: string;
     };
@@ -106,6 +121,8 @@ export type RuntimeExecutionResult = {
 
 export function buildRuntimeArgs(operation: RuntimeOperation): string[] {
   switch (operation.name) {
+    case "version":
+      return ["--version"];
     case "ai_spec":
       return ["ai", "spec"];
     case "ai_detect_kind":
@@ -114,6 +131,8 @@ export function buildRuntimeArgs(operation: RuntimeOperation): string[] {
       return ["state", "from-draft", "--in", operation.draftPath, "--out", operation.outputPath];
     case "ai_export_project_overview":
       return ["ai", "export", "project-overview", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "ai_export_bundle":
+      return ["ai", "export", "bundle", "--in", operation.workbookPath, "--out", operation.outputPath];
     case "ai_export_task_edit":
       return [
         "ai",
@@ -156,6 +175,16 @@ export function buildRuntimeArgs(operation: RuntimeOperation): string[] {
       return ["export", "xlsx", "--in", operation.workbookPath, "--out", operation.outputPath];
     case "import_xlsx":
       return ["import", "xlsx", "--in", operation.inputPath, "--out", operation.outputPath];
+    case "report_wbs_xlsx":
+      return ["report", "wbs-xlsx", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "report_daily_svg":
+      return ["report", "daily-svg", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "report_weekly_svg":
+      return ["report", "weekly-svg", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "report_monthly_calendar_svg":
+      return ["report", "monthly-calendar-svg", "--in", operation.workbookPath, "--out", operation.outputPath];
+    case "report_all":
+      return ["report", "all", "--in", operation.workbookPath, "--out", operation.outputPath];
     case "report_wbs_markdown":
       return ["report", "wbs-markdown", "--in", operation.workbookPath, "--out", operation.outputPath];
     case "report_mermaid":
