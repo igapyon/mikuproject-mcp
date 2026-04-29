@@ -5,77 +5,77 @@ import { Ajv2020 } from "ajv/dist/2020.js";
 import { loadInitialToolInputSchemas, type ContractToolName } from "../contract/toolSchemas.js";
 
 const validSamples: Record<ContractToolName, Record<string, unknown>> = {
-  "mikuproject.version": {},
-  "mikuproject.ai_spec": {},
-  "mikuproject.ai_detect_kind": {
+  "mikuproject_version": {},
+  "mikuproject_ai_spec": {},
+  "mikuproject_ai_detect_kind": {
     path: "document.json"
   },
-  "mikuproject.state_from_draft": {
+  "mikuproject_state_from_draft": {
     draftPath: "draft.editjson"
   },
-  "mikuproject.ai_export_project_overview": {
+  "mikuproject_ai_export_project_overview": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.ai_export_bundle": {
+  "mikuproject_ai_export_bundle": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.ai_export_task_edit": {
+  "mikuproject_ai_export_task_edit": {
     workbookPath: "workbook.json",
     taskUid: "123"
   },
-  "mikuproject.ai_export_phase_detail": {
+  "mikuproject_ai_export_phase_detail": {
     workbookPath: "workbook.json",
     phaseUid: "100",
     mode: "scoped",
     rootTaskUid: "123",
     maxDepth: 2
   },
-  "mikuproject.ai_validate_patch": {
+  "mikuproject_ai_validate_patch": {
     statePath: "workbook.json",
     patchPath: "patch.editjson"
   },
-  "mikuproject.state_apply_patch": {
+  "mikuproject_state_apply_patch": {
     statePath: "workbook.json",
     patchPath: "patch.editjson"
   },
-  "mikuproject.state_diff": {
+  "mikuproject_state_diff": {
     beforePath: "workbook-before.json",
     afterPath: "workbook-after.json"
   },
-  "mikuproject.state_summarize": {
+  "mikuproject_state_summarize": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.export_workbook_json": {
+  "mikuproject_export_workbook_json": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.export_xml": {
+  "mikuproject_export_xml": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.export_xlsx": {
+  "mikuproject_export_xlsx": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.import_xlsx": {
+  "mikuproject_import_xlsx": {
     inputPath: "project.xlsx"
   },
-  "mikuproject.report_wbs_xlsx": {
+  "mikuproject_report_wbs_xlsx": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.report_daily_svg": {
+  "mikuproject_report_daily_svg": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.report_weekly_svg": {
+  "mikuproject_report_weekly_svg": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.report_monthly_calendar_svg": {
+  "mikuproject_report_monthly_calendar_svg": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.report_all": {
+  "mikuproject_report_all": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.report_wbs_markdown": {
+  "mikuproject_report_wbs_markdown": {
     workbookPath: "workbook.json"
   },
-  "mikuproject.report_mermaid": {
+  "mikuproject_report_mermaid": {
     workbookPath: "workbook.json"
   }
 };

@@ -13,7 +13,7 @@ describe("common result JSON Schema", () => {
     const validate = ajv.compile(schema);
     const result: CommonResult = {
       ok: true,
-      operation: "mikuproject.state_from_draft",
+      operation: "mikuproject_state_from_draft",
       diagnostics: [
         {
           level: "info",
@@ -44,7 +44,7 @@ describe("common result JSON Schema", () => {
     assert.equal(
       validate({
         ok: true,
-        operation: "mikuproject.ai_spec"
+        operation: "mikuproject_ai_spec"
       }),
       false
     );

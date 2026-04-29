@@ -10,7 +10,7 @@ const currentStateUri = "mikuproject://state/current";
 
 export function registerMikuprojectResources(server: McpServer): void {
   server.registerResource(
-    "mikuproject.ai_spec",
+    "mikuproject_ai_spec",
     aiSpecUri,
     {
       title: "mikuproject AI-facing specification",
@@ -58,7 +58,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.state_current",
+    "mikuproject_state_current",
     currentStateUri,
     {
       title: "Current mikuproject workbook state",
@@ -69,7 +69,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.state_saved",
+    "mikuproject_state_saved",
     new ResourceTemplate("mikuproject://state/{name}", { list: undefined }),
     {
       title: "Saved mikuproject workbook state",
@@ -110,7 +110,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.export_workbook_json",
+    "mikuproject_export_workbook_json",
     "mikuproject://export/workbook-json",
     {
       title: "Exported mikuproject workbook JSON",
@@ -121,7 +121,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.export_project_xml",
+    "mikuproject_export_project_xml",
     "mikuproject://export/project-xml",
     {
       title: "Exported mikuproject MS Project XML",
@@ -132,7 +132,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.export_project_xlsx",
+    "mikuproject_export_project_xlsx",
     "mikuproject://export/project-xlsx",
     {
       title: "Exported mikuproject XLSX",
@@ -143,7 +143,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.report_wbs_xlsx",
+    "mikuproject_report_wbs_xlsx",
     "mikuproject://report/wbs-xlsx",
     {
       title: "mikuproject WBS XLSX report",
@@ -154,7 +154,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.report_daily_svg",
+    "mikuproject_report_daily_svg",
     "mikuproject://report/daily-svg",
     {
       title: "mikuproject daily SVG report",
@@ -165,7 +165,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.report_weekly_svg",
+    "mikuproject_report_weekly_svg",
     "mikuproject://report/weekly-svg",
     {
       title: "mikuproject weekly SVG report",
@@ -176,7 +176,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.report_monthly_calendar_svg",
+    "mikuproject_report_monthly_calendar_svg",
     "mikuproject://report/monthly-calendar-svg",
     {
       title: "mikuproject monthly calendar SVG archive",
@@ -193,7 +193,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.report_all",
+    "mikuproject_report_all",
     "mikuproject://report/all",
     {
       title: "mikuproject report bundle",
@@ -204,7 +204,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.report_wbs_markdown",
+    "mikuproject_report_wbs_markdown",
     "mikuproject://report/wbs-markdown",
     {
       title: "mikuproject WBS Markdown report",
@@ -215,7 +215,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.report_mermaid",
+    "mikuproject_report_mermaid",
     "mikuproject://report/mermaid",
     {
       title: "mikuproject Mermaid report",
@@ -226,7 +226,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.operation_summary",
+    "mikuproject_operation_summary",
     new ResourceTemplate("mikuproject://summary/{operationId}", { list: undefined }),
     {
       title: "mikuproject operation summary",
@@ -246,7 +246,7 @@ export function registerMikuprojectResources(server: McpServer): void {
   );
 
   server.registerResource(
-    "mikuproject.diagnostics",
+    "mikuproject_diagnostics",
     new ResourceTemplate("mikuproject://diagnostics/{operationId}", { list: undefined }),
     {
       title: "mikuproject diagnostics log",

@@ -17,30 +17,34 @@ describe("MCP server smoke", () => {
       const tools = await fixture.client.listTools();
       const toolNames = tools.tools.map((tool) => tool.name).sort();
 
+      for (const toolName of toolNames) {
+        assert.match(toolName, /^[a-z0-9_-]+$/);
+      }
+
       assert.deepEqual(toolNames, [
-        "mikuproject.ai_detect_kind",
-        "mikuproject.ai_export_bundle",
-        "mikuproject.ai_export_phase_detail",
-        "mikuproject.ai_export_project_overview",
-        "mikuproject.ai_export_task_edit",
-        "mikuproject.ai_spec",
-        "mikuproject.ai_validate_patch",
-        "mikuproject.export_workbook_json",
-        "mikuproject.export_xlsx",
-        "mikuproject.export_xml",
-        "mikuproject.import_xlsx",
-        "mikuproject.report_all",
-        "mikuproject.report_daily_svg",
-        "mikuproject.report_mermaid",
-        "mikuproject.report_monthly_calendar_svg",
-        "mikuproject.report_wbs_markdown",
-        "mikuproject.report_wbs_xlsx",
-        "mikuproject.report_weekly_svg",
-        "mikuproject.state_apply_patch",
-        "mikuproject.state_diff",
-        "mikuproject.state_from_draft",
-        "mikuproject.state_summarize",
-        "mikuproject.version"
+        "mikuproject_ai_detect_kind",
+        "mikuproject_ai_export_bundle",
+        "mikuproject_ai_export_phase_detail",
+        "mikuproject_ai_export_project_overview",
+        "mikuproject_ai_export_task_edit",
+        "mikuproject_ai_spec",
+        "mikuproject_ai_validate_patch",
+        "mikuproject_export_workbook_json",
+        "mikuproject_export_xlsx",
+        "mikuproject_export_xml",
+        "mikuproject_import_xlsx",
+        "mikuproject_report_all",
+        "mikuproject_report_daily_svg",
+        "mikuproject_report_mermaid",
+        "mikuproject_report_monthly_calendar_svg",
+        "mikuproject_report_wbs_markdown",
+        "mikuproject_report_wbs_xlsx",
+        "mikuproject_report_weekly_svg",
+        "mikuproject_state_apply_patch",
+        "mikuproject_state_diff",
+        "mikuproject_state_from_draft",
+        "mikuproject_state_summarize",
+        "mikuproject_version"
       ]);
     } finally {
       await fixture.close();
@@ -66,7 +70,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.ai_spec",
+        name: "mikuproject_ai_spec",
         arguments: {}
       });
       const content = assertTextToolContent(result.content);
@@ -74,7 +78,7 @@ describe("MCP server smoke", () => {
       assert.equal(content.length, 1);
 
       const parsed = JSON.parse(content[0].text);
-      assert.equal(parsed.operation, "mikuproject.ai_spec");
+      assert.equal(parsed.operation, "mikuproject_ai_spec");
       assert.equal(Array.isArray(parsed.diagnostics), true);
     } finally {
       await fixture.close();
@@ -106,14 +110,14 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.version",
+        name: "mikuproject_version",
         arguments: {}
       });
       const content = assertTextToolContent(result.content);
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.version");
+      assert.equal(parsed.operation, "mikuproject_version");
       assert.match(parsed.stdout, /mikuproject 9\.9\.9/);
     } finally {
       await fixture.close();
@@ -195,7 +199,7 @@ describe("MCP server smoke", () => {
     mkdirSync(diagnosticsDir, { recursive: true });
     writeFileSync(
       join(summaryDir, "op-123.json"),
-      JSON.stringify({ operationId: "op-123", operation: "mikuproject.state_diff", changeCount: 1 })
+      JSON.stringify({ operationId: "op-123", operation: "mikuproject_state_diff", changeCount: 1 })
     );
     writeFileSync(
       join(diagnosticsDir, "op-123.json"),
@@ -215,7 +219,7 @@ describe("MCP server smoke", () => {
 
       assert.equal(summaryContent[0].uri, "mikuproject://summary/op-123");
       assert.equal(summaryJson.operationId, "op-123");
-      assert.equal(summaryJson.operation, "mikuproject.state_diff");
+      assert.equal(summaryJson.operation, "mikuproject_state_diff");
       assert.equal(summaryJson.changeCount, 1);
 
       const diagnostics = await fixture.client.readResource({
@@ -299,7 +303,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.state_from_draft",
+        name: "mikuproject_state_from_draft",
         arguments: {
           draftPath
         }
@@ -308,7 +312,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.state_from_draft");
+      assert.equal(parsed.operation, "mikuproject_state_from_draft");
       assert.equal(parsed.artifacts[0].role, "workbook_state");
       assert.equal(parsed.artifacts[0].uri, "mikuproject://state/current");
       assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/state/current-workbook.json"));
@@ -358,7 +362,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.ai_export_project_overview",
+        name: "mikuproject_ai_export_project_overview",
         arguments: {
           workbookPath
         }
@@ -367,7 +371,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.ai_export_project_overview");
+      assert.equal(parsed.operation, "mikuproject_ai_export_project_overview");
       assert.equal(parsed.artifacts[0].role, "projection");
       assert.equal(parsed.artifacts[0].uri, "mikuproject://projection/project-overview");
       assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/projection/project-overview.editjson"));
@@ -417,7 +421,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.ai_export_bundle",
+        name: "mikuproject_ai_export_bundle",
         arguments: {
           workbookPath
         }
@@ -426,7 +430,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.ai_export_bundle");
+      assert.equal(parsed.operation, "mikuproject_ai_export_bundle");
       assert.equal(parsed.artifacts[0].role, "projection");
       assert.equal(parsed.artifacts[0].uri, "mikuproject://projection/bundle");
       assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/projection/bundle.editjson"));
@@ -476,7 +480,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.ai_export_task_edit",
+        name: "mikuproject_ai_export_task_edit",
         arguments: {
           workbookPath,
           taskUid: "123"
@@ -486,7 +490,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.ai_export_task_edit");
+      assert.equal(parsed.operation, "mikuproject_ai_export_task_edit");
       assert.equal(parsed.artifacts[0].role, "projection");
       assert.equal(parsed.artifacts[0].uri, "mikuproject://projection/task-edit/123");
       assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/projection/task-123.editjson"));
@@ -537,7 +541,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.ai_export_phase_detail",
+        name: "mikuproject_ai_export_phase_detail",
         arguments: {
           workbookPath,
           phaseUid: "100",
@@ -550,7 +554,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.ai_export_phase_detail");
+      assert.equal(parsed.operation, "mikuproject_ai_export_phase_detail");
       assert.equal(parsed.artifacts[0].role, "projection");
       assert.equal(parsed.artifacts[0].uri, "mikuproject://projection/phase-detail/100");
       assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/projection/phase-100.editjson"));
@@ -602,7 +606,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.ai_validate_patch",
+        name: "mikuproject_ai_validate_patch",
         arguments: {
           statePath,
           patchPath
@@ -612,7 +616,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.ai_validate_patch");
+      assert.equal(parsed.operation, "mikuproject_ai_validate_patch");
       assert.equal(parsed.input.statePath, statePath);
       assert.equal(parsed.input.patchPath, patchPath);
       assert.match(parsed.stdout, /validate-patch ok=true/);
@@ -660,7 +664,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.state_apply_patch",
+        name: "mikuproject_state_apply_patch",
         arguments: {
           statePath,
           patchPath
@@ -670,7 +674,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.state_apply_patch");
+      assert.equal(parsed.operation, "mikuproject_state_apply_patch");
       assert.equal(parsed.artifacts[0].role, "workbook_state");
       assert.equal(parsed.artifacts[0].uri, "mikuproject://state/next");
       assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/state/next-workbook.json"));
@@ -723,7 +727,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.state_diff",
+        name: "mikuproject_state_diff",
         arguments: {
           beforePath,
           afterPath
@@ -733,7 +737,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.state_diff");
+      assert.equal(parsed.operation, "mikuproject_state_diff");
       assert.equal(typeof parsed.operationId, "string");
       assert.equal(parsed.input.beforePath, beforePath);
       assert.equal(parsed.input.afterPath, afterPath);
@@ -755,7 +759,7 @@ describe("MCP server smoke", () => {
       const summaryJson = JSON.parse(summaryContent[0].text);
 
       assert.equal(summaryJson.operationId, parsed.operationId);
-      assert.equal(summaryJson.operation, "mikuproject.state_diff");
+      assert.equal(summaryJson.operation, "mikuproject_state_diff");
       assert.equal(summaryJson.diagnosticsCount, parsed.diagnostics.length);
 
       const diagnostics = await fixture.client.readResource({
@@ -765,7 +769,7 @@ describe("MCP server smoke", () => {
       const diagnosticsJson = JSON.parse(diagnosticsContent[0].text);
 
       assert.equal(diagnosticsJson.operationId, parsed.operationId);
-      assert.equal(diagnosticsJson.operation, "mikuproject.state_diff");
+      assert.equal(diagnosticsJson.operation, "mikuproject_state_diff");
       assert.equal(diagnosticsJson.diagnostics[0].code, "configured_node_runtime");
     } finally {
       await fixture.close();
@@ -807,7 +811,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.state_summarize",
+        name: "mikuproject_state_summarize",
         arguments: {
           workbookPath
         }
@@ -816,7 +820,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.state_summarize");
+      assert.equal(parsed.operation, "mikuproject_state_summarize");
       assert.equal(parsed.input.workbookPath, workbookPath);
 
       const summary = JSON.parse(parsed.stdout);
@@ -864,7 +868,7 @@ describe("MCP server smoke", () => {
 
     try {
       const result = await fixture.client.callTool({
-        name: "mikuproject.export_workbook_json",
+        name: "mikuproject_export_workbook_json",
         arguments: {
           workbookPath
         }
@@ -873,7 +877,7 @@ describe("MCP server smoke", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.export_workbook_json");
+      assert.equal(parsed.operation, "mikuproject_export_workbook_json");
       assert.equal(parsed.artifacts[0].role, "mikuproject_workbook_json");
       assert.equal(parsed.artifacts[0].uri, "mikuproject://export/workbook-json");
       assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/export/workbook.json"));
@@ -924,7 +928,7 @@ describe("MCP server smoke", () => {
     const fixture = await connectServer();
 
     try {
-      const parsed = await callJsonTool(fixture.client, "mikuproject.export_workbook_json", {
+      const parsed = await callJsonTool(fixture.client, "mikuproject_export_workbook_json", {
         workbookPath,
         outputPath: customOutputPath
       });
@@ -1015,58 +1019,58 @@ describe("MCP server smoke", () => {
     const fixture = await connectServer();
 
     try {
-      const exportXml = await callJsonTool(fixture.client, "mikuproject.export_xml", { workbookPath });
+      const exportXml = await callJsonTool(fixture.client, "mikuproject_export_xml", { workbookPath });
       assert.equal(exportXml.ok, true);
       assert.equal(exportXml.artifacts[0].role, "ms_project_xml");
       assert.equal(exportXml.artifacts[0].path, join(workspacePath, "mikuproject/export/project.xml"));
       assert.match(readFileSync(exportXml.artifacts[0].path, "utf8"), /<Name>Smoke<\/Name>/);
 
-      const exportXlsx = await callJsonTool(fixture.client, "mikuproject.export_xlsx", { workbookPath });
+      const exportXlsx = await callJsonTool(fixture.client, "mikuproject_export_xlsx", { workbookPath });
       assert.equal(exportXlsx.ok, true);
       assert.equal(exportXlsx.artifacts[0].role, "xlsx_workbook");
       assert.equal(readFileSync(exportXlsx.artifacts[0].path, "utf8"), "xlsx:Smoke");
 
-      const importXlsx = await callJsonTool(fixture.client, "mikuproject.import_xlsx", { inputPath: xlsxPath });
+      const importXlsx = await callJsonTool(fixture.client, "mikuproject_import_xlsx", { inputPath: xlsxPath });
       assert.equal(importXlsx.ok, true);
       assert.equal(importXlsx.artifacts[0].role, "workbook_state");
       assert.equal(JSON.parse(readFileSync(importXlsx.artifacts[0].path, "utf8")).imported, "source xlsx");
 
-      const wbsXlsx = await callJsonTool(fixture.client, "mikuproject.report_wbs_xlsx", { workbookPath });
+      const wbsXlsx = await callJsonTool(fixture.client, "mikuproject_report_wbs_xlsx", { workbookPath });
       assert.equal(wbsXlsx.ok, true);
       assert.equal(wbsXlsx.artifacts[0].role, "report_output");
       assert.equal(wbsXlsx.artifacts[0].uri, "mikuproject://report/wbs-xlsx");
       assert.equal(readFileSync(wbsXlsx.artifacts[0].path, "utf8"), "wbs-xlsx:Smoke");
 
-      const dailySvg = await callJsonTool(fixture.client, "mikuproject.report_daily_svg", { workbookPath });
+      const dailySvg = await callJsonTool(fixture.client, "mikuproject_report_daily_svg", { workbookPath });
       assert.equal(dailySvg.ok, true);
       assert.equal(dailySvg.artifacts[0].role, "report_output");
       assert.equal(dailySvg.artifacts[0].uri, "mikuproject://report/daily-svg");
       assert.match(readFileSync(dailySvg.artifacts[0].path, "utf8"), /<svg>/);
 
-      const weeklySvg = await callJsonTool(fixture.client, "mikuproject.report_weekly_svg", { workbookPath });
+      const weeklySvg = await callJsonTool(fixture.client, "mikuproject_report_weekly_svg", { workbookPath });
       assert.equal(weeklySvg.ok, true);
       assert.equal(weeklySvg.artifacts[0].role, "report_output");
       assert.equal(weeklySvg.artifacts[0].uri, "mikuproject://report/weekly-svg");
       assert.match(readFileSync(weeklySvg.artifacts[0].path, "utf8"), /weekly Smoke/);
 
-      const monthlySvg = await callJsonTool(fixture.client, "mikuproject.report_monthly_calendar_svg", { workbookPath });
+      const monthlySvg = await callJsonTool(fixture.client, "mikuproject_report_monthly_calendar_svg", { workbookPath });
       assert.equal(monthlySvg.ok, true);
       assert.equal(monthlySvg.artifacts[0].role, "report_output");
       assert.equal(monthlySvg.artifacts[0].uri, "mikuproject://report/monthly-calendar-svg");
       assert.equal(readFileSync(monthlySvg.artifacts[0].path, "utf8"), "monthly-zip:Smoke");
 
-      const reportAll = await callJsonTool(fixture.client, "mikuproject.report_all", { workbookPath });
+      const reportAll = await callJsonTool(fixture.client, "mikuproject_report_all", { workbookPath });
       assert.equal(reportAll.ok, true);
       assert.equal(reportAll.artifacts[0].role, "report_output");
       assert.equal(reportAll.artifacts[0].uri, "mikuproject://report/all");
       assert.equal(readFileSync(reportAll.artifacts[0].path, "utf8"), "report-bundle:Smoke");
 
-      const wbs = await callJsonTool(fixture.client, "mikuproject.report_wbs_markdown", { workbookPath });
+      const wbs = await callJsonTool(fixture.client, "mikuproject_report_wbs_markdown", { workbookPath });
       assert.equal(wbs.ok, true);
       assert.equal(wbs.artifacts[0].role, "report_output");
       assert.match(readFileSync(wbs.artifacts[0].path, "utf8"), /# WBS/);
 
-      const mermaid = await callJsonTool(fixture.client, "mikuproject.report_mermaid", { workbookPath });
+      const mermaid = await callJsonTool(fixture.client, "mikuproject_report_mermaid", { workbookPath });
       assert.equal(mermaid.ok, true);
       assert.equal(mermaid.artifacts[0].role, "report_output");
       assert.match(readFileSync(mermaid.artifacts[0].path, "utf8"), /graph TD/);

@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.version.input.schema.json",
-  "title": "mikuproject.version input",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {}
-}
