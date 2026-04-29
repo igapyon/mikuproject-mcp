@@ -19,6 +19,7 @@ describe("MCP server smoke", () => {
 
       assert.deepEqual(toolNames, [
         "mikuproject.ai_detect_kind",
+        "mikuproject.ai_export_bundle",
         "mikuproject.ai_export_phase_detail",
         "mikuproject.ai_export_project_overview",
         "mikuproject.ai_export_task_edit",
@@ -28,12 +29,18 @@ describe("MCP server smoke", () => {
         "mikuproject.export_xlsx",
         "mikuproject.export_xml",
         "mikuproject.import_xlsx",
+        "mikuproject.report_all",
+        "mikuproject.report_daily_svg",
         "mikuproject.report_mermaid",
+        "mikuproject.report_monthly_calendar_svg",
         "mikuproject.report_wbs_markdown",
+        "mikuproject.report_wbs_xlsx",
+        "mikuproject.report_weekly_svg",
         "mikuproject.state_apply_patch",
         "mikuproject.state_diff",
         "mikuproject.state_from_draft",
-        "mikuproject.state_summarize"
+        "mikuproject.state_summarize",
+        "mikuproject.version"
       ]);
     } finally {
       await fixture.close();
@@ -71,6 +78,47 @@ describe("MCP server smoke", () => {
       assert.equal(Array.isArray(parsed.diagnostics), true);
     } finally {
       await fixture.close();
+    }
+  });
+
+  it("calls the read-only version tool through MCP", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-version-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== '--version') {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "console.log('mikuproject 9.9.9');"
+      ].join("\n")
+    );
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const result = await fixture.client.callTool({
+        name: "mikuproject.version",
+        arguments: {}
+      });
+      const content = assertTextToolContent(result.content);
+      const parsed = JSON.parse(content[0].text);
+
+      assert.equal(parsed.ok, true);
+      assert.equal(parsed.operation, "mikuproject.version");
+      assert.match(parsed.stdout, /mikuproject 9\.9\.9/);
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
     }
   });
 
@@ -326,6 +374,65 @@ describe("MCP server smoke", () => {
 
       const projection = JSON.parse(readFileSync(parsed.artifacts[0].path, "utf8"));
       assert.equal(projection.view_type, "project_overview_view");
+      assert.equal(projection.project.name, "Smoke");
+    } finally {
+      await fixture.close();
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_JAVA", previousJava);
+      restoreEnv("MIKUPROJECT_MCP_RUNTIME_NODE", previousNode);
+      restoreEnv("MIKUPROJECT_MCP_WORKSPACE", previousWorkspace);
+    }
+  });
+
+  it("calls ai_export_bundle and returns the generated projection artifact", async () => {
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-bundle-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const workspacePath = join(tempRoot, "workspace");
+    const workbookPath = join(tempRoot, "workbook.json");
+    const previousJava = process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    const previousNode = process.env.MIKUPROJECT_MCP_RUNTIME_NODE;
+    const previousWorkspace = process.env.MIKUPROJECT_MCP_WORKSPACE;
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';",
+        "import { dirname } from 'node:path';",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'ai export bundle --in ' + args[4] + ' --out ' + args[6]) {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "const workbook = JSON.parse(readFileSync(args[4], 'utf8'));",
+        "mkdirSync(dirname(args[6]), { recursive: true });",
+        "writeFileSync(args[6], JSON.stringify({ view_type: 'ai_bundle_view', project: workbook.project }, null, 2));"
+      ].join("\n")
+    );
+    writeFileSync(workbookPath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "Smoke" } }));
+
+    delete process.env.MIKUPROJECT_MCP_RUNTIME_JAVA;
+    process.env.MIKUPROJECT_MCP_RUNTIME_NODE = runtimePath;
+    process.env.MIKUPROJECT_MCP_WORKSPACE = workspacePath;
+
+    const fixture = await connectServer();
+
+    try {
+      const result = await fixture.client.callTool({
+        name: "mikuproject.ai_export_bundle",
+        arguments: {
+          workbookPath
+        }
+      });
+      const content = assertTextToolContent(result.content);
+      const parsed = JSON.parse(content[0].text);
+
+      assert.equal(parsed.ok, true);
+      assert.equal(parsed.operation, "mikuproject.ai_export_bundle");
+      assert.equal(parsed.artifacts[0].role, "projection");
+      assert.equal(parsed.artifacts[0].uri, "mikuproject://projection/bundle");
+      assert.equal(parsed.artifacts[0].path, join(workspacePath, "mikuproject/projection/bundle.editjson"));
+
+      const projection = JSON.parse(readFileSync(parsed.artifacts[0].path, "utf8"));
+      assert.equal(projection.view_type, "ai_bundle_view");
       assert.equal(projection.project.name, "Smoke");
     } finally {
       await fixture.close();
@@ -866,6 +973,26 @@ describe("MCP server smoke", () => {
         "  write(args[5], JSON.stringify({ kind: 'mikuproject_workbook_json', imported: readFileSync(args[3], 'utf8') }, null, 2));",
         "  process.exit(0);",
         "}",
+        "if (joined === 'report wbs-xlsx --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], 'wbs-xlsx:' + JSON.parse(readFileSync(args[3], 'utf8')).project.name);",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'report daily-svg --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], '<svg><text>daily ' + JSON.parse(readFileSync(args[3], 'utf8')).project.name + '</text></svg>');",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'report weekly-svg --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], '<svg><text>weekly ' + JSON.parse(readFileSync(args[3], 'utf8')).project.name + '</text></svg>');",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'report monthly-calendar-svg --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], 'monthly-zip:' + JSON.parse(readFileSync(args[3], 'utf8')).project.name);",
+        "  process.exit(0);",
+        "}",
+        "if (joined === 'report all --in ' + args[3] + ' --out ' + args[5]) {",
+        "  write(args[5], 'report-bundle:' + JSON.parse(readFileSync(args[3], 'utf8')).project.name);",
+        "  process.exit(0);",
+        "}",
         "if (joined === 'report wbs-markdown --in ' + args[3] + ' --out ' + args[5]) {",
         "  write(args[5], '# WBS\\n\\n- ' + JSON.parse(readFileSync(args[3], 'utf8')).project.name);",
         "  process.exit(0);",
@@ -903,6 +1030,36 @@ describe("MCP server smoke", () => {
       assert.equal(importXlsx.ok, true);
       assert.equal(importXlsx.artifacts[0].role, "workbook_state");
       assert.equal(JSON.parse(readFileSync(importXlsx.artifacts[0].path, "utf8")).imported, "source xlsx");
+
+      const wbsXlsx = await callJsonTool(fixture.client, "mikuproject.report_wbs_xlsx", { workbookPath });
+      assert.equal(wbsXlsx.ok, true);
+      assert.equal(wbsXlsx.artifacts[0].role, "report_output");
+      assert.equal(wbsXlsx.artifacts[0].uri, "mikuproject://report/wbs-xlsx");
+      assert.equal(readFileSync(wbsXlsx.artifacts[0].path, "utf8"), "wbs-xlsx:Smoke");
+
+      const dailySvg = await callJsonTool(fixture.client, "mikuproject.report_daily_svg", { workbookPath });
+      assert.equal(dailySvg.ok, true);
+      assert.equal(dailySvg.artifacts[0].role, "report_output");
+      assert.equal(dailySvg.artifacts[0].uri, "mikuproject://report/daily-svg");
+      assert.match(readFileSync(dailySvg.artifacts[0].path, "utf8"), /<svg>/);
+
+      const weeklySvg = await callJsonTool(fixture.client, "mikuproject.report_weekly_svg", { workbookPath });
+      assert.equal(weeklySvg.ok, true);
+      assert.equal(weeklySvg.artifacts[0].role, "report_output");
+      assert.equal(weeklySvg.artifacts[0].uri, "mikuproject://report/weekly-svg");
+      assert.match(readFileSync(weeklySvg.artifacts[0].path, "utf8"), /weekly Smoke/);
+
+      const monthlySvg = await callJsonTool(fixture.client, "mikuproject.report_monthly_calendar_svg", { workbookPath });
+      assert.equal(monthlySvg.ok, true);
+      assert.equal(monthlySvg.artifacts[0].role, "report_output");
+      assert.equal(monthlySvg.artifacts[0].uri, "mikuproject://report/monthly-calendar-svg");
+      assert.equal(readFileSync(monthlySvg.artifacts[0].path, "utf8"), "monthly-zip:Smoke");
+
+      const reportAll = await callJsonTool(fixture.client, "mikuproject.report_all", { workbookPath });
+      assert.equal(reportAll.ok, true);
+      assert.equal(reportAll.artifacts[0].role, "report_output");
+      assert.equal(reportAll.artifacts[0].uri, "mikuproject://report/all");
+      assert.equal(readFileSync(reportAll.artifacts[0].path, "utf8"), "report-bundle:Smoke");
 
       const wbs = await callJsonTool(fixture.client, "mikuproject.report_wbs_markdown", { workbookPath });
       assert.equal(wbs.ok, true);

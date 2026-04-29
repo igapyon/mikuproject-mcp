@@ -56,6 +56,14 @@ workplace/upstream/mikuproject-skills/
 The Node package metadata is prepared in `packages/node/package.json` for
 `@igapyon/mikuproject-mcp-node`.
 
+The MCP package version should generally follow the bundled Node.js
+`mikuproject` CLI runtime version. The package is a protocol adapter for that
+runtime surface, so keeping the versions aligned makes release notes, Git tags,
+runtime traceability, and downstream MCP client configuration easier to compare.
+If Java and Node runtime artifacts have different patch versions, record both
+runtime versions in release notes, but use the Node CLI version for the MCP npm
+package unless the release is explicitly Java-runtime-only.
+
 Before packaging, `prepack` builds the TypeScript output and copies the
 repository-level `README.md`, `LICENSE`, `contract/`, and `runtime/` assets into
 the package directory so that the published tarball is self-contained.
@@ -129,7 +137,7 @@ Inspector and record any client-compatibility notes.
 
 ## Related Documents
 
-- `docs/miku-soft-50-mcp-design-v20260427.md`
+- `docs/miku-soft-50-mcp-design-v20260429.md`
 - `docs/http-transport-decision-v20260427.md`
 - `contract/README.md`
 - `contract/runtime-cli-mapping.md`

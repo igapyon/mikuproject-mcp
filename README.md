@@ -41,6 +41,17 @@ The package name prepared for the Node release is:
 @igapyon/mikuproject-mcp-node
 ```
 
+## Version Policy
+
+The MCP package version should generally match the bundled Node.js
+`mikuproject` CLI runtime version. For the `0.8.0` MCP release, the bundled
+Node.js CLI reports `mikuproject 0.8.0`.
+
+If the bundled Java runtime has a different patch version, treat that as runtime
+traceability information. Do not use the Java runtime patch version as the MCP
+package version unless the release is intentionally based on a Java-only runtime
+surface.
+
 ## MCP Client Configuration
 
 Use the built stdio entrypoint from your MCP client configuration.
@@ -66,13 +77,13 @@ valid for that client environment.
 GitHub Releases may provide an npm package tarball asset named like:
 
 ```text
-igapyon-mikuproject-mcp-node-0.1.0.tgz
+igapyon-mikuproject-mcp-node-0.8.0.tgz
 ```
 
 After downloading the tarball, install it globally:
 
 ```sh
-npm install -g ./igapyon-mikuproject-mcp-node-0.1.0.tgz
+npm install -g ./igapyon-mikuproject-mcp-node-0.8.0.tgz
 ```
 
 Then configure your MCP client to run the installed command:
@@ -91,7 +102,7 @@ You can also run the release tarball directly with `npm exec` without a global
 install. Replace the version and URL with the release asset you want to use:
 
 ```sh
-npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.1.0/igapyon-mikuproject-mcp-node-0.1.0.tgz -- mikuproject-mcp
+npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.0/igapyon-mikuproject-mcp-node-0.8.0.tgz -- mikuproject-mcp
 ```
 
 Example MCP client configuration:
@@ -104,7 +115,7 @@ Example MCP client configuration:
       "args": [
         "exec",
         "--yes",
-        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.1.0/igapyon-mikuproject-mcp-node-0.1.0.tgz",
+        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.0/igapyon-mikuproject-mcp-node-0.8.0.tgz",
         "--",
         "mikuproject-mcp"
       ]
@@ -135,10 +146,12 @@ tree.
 
 Core state and AI workflow tools:
 
+- `mikuproject.version`
 - `mikuproject.ai_spec`
 - `mikuproject.ai_detect_kind`
 - `mikuproject.state_from_draft`
 - `mikuproject.ai_export_project_overview`
+- `mikuproject.ai_export_bundle`
 - `mikuproject.ai_export_task_edit`
 - `mikuproject.ai_export_phase_detail`
 - `mikuproject.ai_validate_patch`
@@ -152,6 +165,11 @@ Import, export, and report tools:
 - `mikuproject.export_xml`
 - `mikuproject.export_xlsx`
 - `mikuproject.import_xlsx`
+- `mikuproject.report_wbs_xlsx`
+- `mikuproject.report_daily_svg`
+- `mikuproject.report_weekly_svg`
+- `mikuproject.report_monthly_calendar_svg`
+- `mikuproject.report_all`
 - `mikuproject.report_wbs_markdown`
 - `mikuproject.report_mermaid`
 
@@ -165,6 +183,11 @@ Common resource URIs include:
 - `mikuproject://export/workbook-json`
 - `mikuproject://export/project-xml`
 - `mikuproject://export/project-xlsx`
+- `mikuproject://report/wbs-xlsx`
+- `mikuproject://report/daily-svg`
+- `mikuproject://report/weekly-svg`
+- `mikuproject://report/monthly-calendar-svg`
+- `mikuproject://report/all`
 - `mikuproject://report/wbs-markdown`
 - `mikuproject://report/mermaid`
 - `mikuproject://summary/{operationId}`
@@ -214,4 +237,4 @@ isolation.
 ## Developer Documentation
 
 Developer-facing repository layout, implementation order, and contract notes are
-in `docs/development.md` and `docs/miku-soft-50-mcp-design-v20260427.md`.
+in `docs/development.md` and `docs/miku-soft-50-mcp-design-v20260429.md`.
