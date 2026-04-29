@@ -52,7 +52,7 @@ describe("stdio MCP server E2E", () => {
       await client.connect(transport);
 
       const tools = await client.listTools();
-      assert.ok(tools.tools.some((tool) => tool.name === "mikuproject.ai_detect_kind"));
+      assert.ok(tools.tools.some((tool) => tool.name === "mikuproject_ai_detect_kind"));
 
       const resource = await client.readResource({ uri: "mikuproject://spec/ai-json" });
       assert.equal(resource.contents.length, 1);
@@ -61,7 +61,7 @@ describe("stdio MCP server E2E", () => {
       assert.ok(prompts.prompts.some((prompt) => prompt.name === "mikuproject.create_project_draft"));
 
       const result = await client.callTool({
-        name: "mikuproject.ai_detect_kind",
+        name: "mikuproject_ai_detect_kind",
         arguments: {
           path: inputPath
         }
@@ -70,7 +70,7 @@ describe("stdio MCP server E2E", () => {
       const parsed = JSON.parse(content[0].text);
 
       assert.equal(parsed.ok, true);
-      assert.equal(parsed.operation, "mikuproject.ai_detect_kind");
+      assert.equal(parsed.operation, "mikuproject_ai_detect_kind");
       assert.match(parsed.stdout, /"kind":"text"/);
     } finally {
       await client.close();

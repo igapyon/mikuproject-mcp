@@ -44,8 +44,9 @@ The package name prepared for the Node release is:
 ## Version Policy
 
 The MCP package version should generally match the bundled Node.js
-`mikuproject` CLI runtime version. For the `0.8.0` MCP release, the bundled
-Node.js CLI reports `mikuproject 0.8.0`.
+`mikuproject` CLI runtime version. For the `0.8.1` MCP release, the bundled
+Node.js CLI still reports `mikuproject 0.8.0`; this MCP patch release updates
+the adapter contract for MCP client tool-name compatibility.
 
 If the bundled Java runtime has a different patch version, treat that as runtime
 traceability information. Do not use the Java runtime patch version as the MCP
@@ -77,13 +78,13 @@ valid for that client environment.
 GitHub Releases may provide an npm package tarball asset named like:
 
 ```text
-igapyon-mikuproject-mcp-node-0.8.0.tgz
+igapyon-mikuproject-mcp-node-0.8.1.tgz
 ```
 
 After downloading the tarball, install it globally:
 
 ```sh
-npm install -g ./igapyon-mikuproject-mcp-node-0.8.0.tgz
+npm install -g ./igapyon-mikuproject-mcp-node-0.8.1.tgz
 ```
 
 Then configure your MCP client to run the installed command:
@@ -102,7 +103,7 @@ You can also run the release tarball directly with `npm exec` without a global
 install. Replace the version and URL with the release asset you want to use:
 
 ```sh
-npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.0/igapyon-mikuproject-mcp-node-0.8.0.tgz -- mikuproject-mcp
+npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.1/igapyon-mikuproject-mcp-node-0.8.1.tgz -- mikuproject-mcp
 ```
 
 Example MCP client configuration:
@@ -115,7 +116,7 @@ Example MCP client configuration:
       "args": [
         "exec",
         "--yes",
-        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.0/igapyon-mikuproject-mcp-node-0.8.0.tgz",
+        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.1/igapyon-mikuproject-mcp-node-0.8.1.tgz",
         "--",
         "mikuproject-mcp"
       ]
@@ -146,32 +147,32 @@ tree.
 
 Core state and AI workflow tools:
 
-- `mikuproject.version`
-- `mikuproject.ai_spec`
-- `mikuproject.ai_detect_kind`
-- `mikuproject.state_from_draft`
-- `mikuproject.ai_export_project_overview`
-- `mikuproject.ai_export_bundle`
-- `mikuproject.ai_export_task_edit`
-- `mikuproject.ai_export_phase_detail`
-- `mikuproject.ai_validate_patch`
-- `mikuproject.state_apply_patch`
-- `mikuproject.state_diff`
-- `mikuproject.state_summarize`
+- `mikuproject_version`
+- `mikuproject_ai_spec`
+- `mikuproject_ai_detect_kind`
+- `mikuproject_state_from_draft`
+- `mikuproject_ai_export_project_overview`
+- `mikuproject_ai_export_bundle`
+- `mikuproject_ai_export_task_edit`
+- `mikuproject_ai_export_phase_detail`
+- `mikuproject_ai_validate_patch`
+- `mikuproject_state_apply_patch`
+- `mikuproject_state_diff`
+- `mikuproject_state_summarize`
 
 Import, export, and report tools:
 
-- `mikuproject.export_workbook_json`
-- `mikuproject.export_xml`
-- `mikuproject.export_xlsx`
-- `mikuproject.import_xlsx`
-- `mikuproject.report_wbs_xlsx`
-- `mikuproject.report_daily_svg`
-- `mikuproject.report_weekly_svg`
-- `mikuproject.report_monthly_calendar_svg`
-- `mikuproject.report_all`
-- `mikuproject.report_wbs_markdown`
-- `mikuproject.report_mermaid`
+- `mikuproject_export_workbook_json`
+- `mikuproject_export_xml`
+- `mikuproject_export_xlsx`
+- `mikuproject_import_xlsx`
+- `mikuproject_report_wbs_xlsx`
+- `mikuproject_report_daily_svg`
+- `mikuproject_report_weekly_svg`
+- `mikuproject_report_monthly_calendar_svg`
+- `mikuproject_report_all`
+- `mikuproject_report_wbs_markdown`
+- `mikuproject_report_mermaid`
 
 ## Resources
 

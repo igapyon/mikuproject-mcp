@@ -306,7 +306,7 @@ For products with a documented CLI, MCP tool names should preserve the CLI
 command tree. Use this form:
 
 ```text
-<product>.<cli command tokens joined by "_">
+<product>_<cli command tokens joined by "_">
 ```
 
 Omit only the runtime launcher, such as `node mikuproject.mjs` or
@@ -320,29 +320,29 @@ Skills documentation harder to compare.
 
 Examples:
 
-- `mikuproject.version`
-- `mikuproject.ai_spec`
-- `mikuproject.ai_detect_kind`
-- `mikuproject.state_from_draft`
-- `mikuproject.ai_export_project_overview`
-- `mikuproject.ai_export_bundle`
-- `mikuproject.ai_export_task_edit`
-- `mikuproject.ai_export_phase_detail`
-- `mikuproject.ai_validate_patch`
-- `mikuproject.state_apply_patch`
-- `mikuproject.state_diff`
-- `mikuproject.state_summarize`
-- `mikuproject.export_workbook_json`
-- `mikuproject.export_xml`
-- `mikuproject.export_xlsx`
-- `mikuproject.import_xlsx`
-- `mikuproject.report_wbs_xlsx`
-- `mikuproject.report_daily_svg`
-- `mikuproject.report_weekly_svg`
-- `mikuproject.report_monthly_calendar_svg`
-- `mikuproject.report_all`
-- `mikuproject.report_wbs_markdown`
-- `mikuproject.report_mermaid`
+- `mikuproject_version`
+- `mikuproject_ai_spec`
+- `mikuproject_ai_detect_kind`
+- `mikuproject_state_from_draft`
+- `mikuproject_ai_export_project_overview`
+- `mikuproject_ai_export_bundle`
+- `mikuproject_ai_export_task_edit`
+- `mikuproject_ai_export_phase_detail`
+- `mikuproject_ai_validate_patch`
+- `mikuproject_state_apply_patch`
+- `mikuproject_state_diff`
+- `mikuproject_state_summarize`
+- `mikuproject_export_workbook_json`
+- `mikuproject_export_xml`
+- `mikuproject_export_xlsx`
+- `mikuproject_import_xlsx`
+- `mikuproject_report_wbs_xlsx`
+- `mikuproject_report_daily_svg`
+- `mikuproject_report_weekly_svg`
+- `mikuproject_report_monthly_calendar_svg`
+- `mikuproject_report_all`
+- `mikuproject_report_wbs_markdown`
+- `mikuproject_report_mermaid`
 
 Tool input should use JSON Schema. Tool results should return structured content when practical. For compatibility with clients that primarily display text, structured results may also be serialized into a text content block.
 
@@ -605,29 +605,29 @@ For a first miku MCP server, use this shape.
 
 For `mikuproject-mcp`, the MVP tools should be close to the Agent Skills MVP operation set.
 
-- `mikuproject.ai_spec`
-- `mikuproject.ai_detect_kind`
-- `mikuproject.version`
-- `mikuproject.state_from_draft`
-- `mikuproject.ai_export_project_overview`
-- `mikuproject.ai_export_bundle`
-- `mikuproject.ai_export_task_edit`
-- `mikuproject.ai_export_phase_detail`
-- `mikuproject.ai_validate_patch`
-- `mikuproject.state_apply_patch`
-- `mikuproject.state_diff`
-- `mikuproject.state_summarize`
-- `mikuproject.export_workbook_json`
-- `mikuproject.export_xml`
-- `mikuproject.export_xlsx`
-- `mikuproject.import_xlsx`
-- `mikuproject.report_wbs_xlsx`
-- `mikuproject.report_daily_svg`
-- `mikuproject.report_weekly_svg`
-- `mikuproject.report_monthly_calendar_svg`
-- `mikuproject.report_all`
-- `mikuproject.report_wbs_markdown`
-- `mikuproject.report_mermaid`
+- `mikuproject_ai_spec`
+- `mikuproject_ai_detect_kind`
+- `mikuproject_version`
+- `mikuproject_state_from_draft`
+- `mikuproject_ai_export_project_overview`
+- `mikuproject_ai_export_bundle`
+- `mikuproject_ai_export_task_edit`
+- `mikuproject_ai_export_phase_detail`
+- `mikuproject_ai_validate_patch`
+- `mikuproject_state_apply_patch`
+- `mikuproject_state_diff`
+- `mikuproject_state_summarize`
+- `mikuproject_export_workbook_json`
+- `mikuproject_export_xml`
+- `mikuproject_export_xlsx`
+- `mikuproject_import_xlsx`
+- `mikuproject_report_wbs_xlsx`
+- `mikuproject_report_daily_svg`
+- `mikuproject_report_weekly_svg`
+- `mikuproject_report_monthly_calendar_svg`
+- `mikuproject_report_all`
+- `mikuproject_report_wbs_markdown`
+- `mikuproject_report_mermaid`
 
 The current first version includes core state workflow tools plus file
 import/export and report outputs that are available in the bundled Java and
@@ -747,11 +747,11 @@ CLI correspondence.
 
 The CLI command tree is the naming source for MCP tools:
 
-- `ai spec` becomes `mikuproject.ai_spec`
-- `ai detect-kind` becomes `mikuproject.ai_detect_kind`
-- `state from-draft` becomes `mikuproject.state_from_draft`
-- `ai validate-patch` becomes `mikuproject.ai_validate_patch`
-- `state apply-patch` becomes `mikuproject.state_apply_patch`
+- `ai spec` becomes `mikuproject_ai_spec`
+- `ai detect-kind` becomes `mikuproject_ai_detect_kind`
+- `state from-draft` becomes `mikuproject_state_from_draft`
+- `ai validate-patch` becomes `mikuproject_ai_validate_patch`
+- `state apply-patch` becomes `mikuproject_state_apply_patch`
 
 For `mikuproject-mcp`, the MCP server implementation is TypeScript. The
 TypeScript version establishes the MCP contract for tools, schemas, result

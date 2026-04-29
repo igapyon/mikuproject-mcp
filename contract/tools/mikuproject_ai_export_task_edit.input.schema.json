@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.ai_export_task_edit.input.schema.json",
-  "title": "mikuproject.ai_export_task_edit input",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject_ai_export_task_edit.input.schema.json",
+  "title": "mikuproject_ai_export_task_edit input",
   "type": "object",
   "additionalProperties": false,
   "required": ["workbookPath", "taskUid"],

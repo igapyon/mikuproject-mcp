@@ -28,8 +28,8 @@ workspace policy, storage policy, and runtime adapter code.
   - [x] bundled runtime artifact directory: `runtime/`
   - [x] local workspace directory: `workplace/`
   - [x] first transport: local stdio only
-  - [x] first tools: `mikuproject.ai_spec`, `mikuproject.ai_detect_kind`,
-        `mikuproject.state_from_draft`
+  - [x] first tools: `mikuproject_ai_spec`, `mikuproject_ai_detect_kind`,
+        `mikuproject_state_from_draft`
 - [x] Confirm the current official MCP TypeScript SDK package and Node.js engine
       requirements before installing dependencies.
 - [x] Confirm available upstream runtime artifacts under `runtime/`.
@@ -100,17 +100,17 @@ workspace policy, storage policy, and runtime adapter code.
 
 Implement product-prefixed tools with JSON Schema input and structured results.
 
-- [x] `mikuproject.ai_spec`
-- [x] `mikuproject.ai_detect_kind`
-- [x] `mikuproject.state_from_draft`
-- [x] `mikuproject.ai_export_project_overview`
-- [x] `mikuproject.ai_export_task_edit`
-- [x] `mikuproject.ai_export_phase_detail`
-- [x] `mikuproject.ai_validate_patch`
-- [x] `mikuproject.state_apply_patch`
-- [x] `mikuproject.state_diff`
-- [x] `mikuproject.state_summarize`
-- [x] `mikuproject.export_workbook_json`
+- [x] `mikuproject_ai_spec`
+- [x] `mikuproject_ai_detect_kind`
+- [x] `mikuproject_state_from_draft`
+- [x] `mikuproject_ai_export_project_overview`
+- [x] `mikuproject_ai_export_task_edit`
+- [x] `mikuproject_ai_export_phase_detail`
+- [x] `mikuproject_ai_validate_patch`
+- [x] `mikuproject_state_apply_patch`
+- [x] `mikuproject_state_diff`
+- [x] `mikuproject_state_summarize`
+- [x] `mikuproject_export_workbook_json`
 
 File import/export and report generation should wait until the core state
 workflow is stable.
@@ -122,12 +122,12 @@ CLI backend and MCP backend coverage can stay aligned for Phase C workflows.
 
 Requested CLI-to-MCP mapping:
 
-- [x] `report wbs-xlsx` -> `mikuproject.report_wbs_xlsx`
-- [x] `report daily-svg` -> `mikuproject.report_daily_svg`
-- [x] `report weekly-svg` -> `mikuproject.report_weekly_svg`
+- [x] `report wbs-xlsx` -> `mikuproject_report_wbs_xlsx`
+- [x] `report daily-svg` -> `mikuproject_report_daily_svg`
+- [x] `report weekly-svg` -> `mikuproject_report_weekly_svg`
 - [x] `report monthly-calendar-svg` ->
-      `mikuproject.report_monthly_calendar_svg`
-- [x] `report all` -> `mikuproject.report_all`
+      `mikuproject_report_monthly_calendar_svg`
+- [x] `report all` -> `mikuproject_report_all`
 
 Implementation tasks:
 
@@ -142,8 +142,8 @@ Implementation tasks:
 - [x] Add resource URIs and resource readers for default outputs where useful:
       WBS XLSX, daily SVG, weekly SVG, monthly calendar SVG archive, and report
       bundle.
-- [x] Keep `mikuproject.report_wbs_xlsx` separate from
-      `mikuproject.export_xlsx`; the former is WBS report XLSX, while the latter
+- [x] Keep `mikuproject_report_wbs_xlsx` separate from
+      `mikuproject_export_xlsx`; the former is WBS report XLSX, while the latter
       is structural workbook XLSX export.
 - [x] Preserve report artifacts as `report_output` or another explicitly
       documented report artifact role, not as `xlsx_workbook`.

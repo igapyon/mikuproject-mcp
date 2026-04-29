@@ -21,7 +21,7 @@ export function registerMikuprojectPrompts(server: McpServer): void {
             text: [
               "Use mikuproject semantics to create a project draft document.",
               "Read mikuproject://spec/ai-json before choosing field names or artifact roles.",
-              "Return a draft document suitable for mikuproject.state_from_draft.",
+              "Return a draft document suitable for mikuproject_state_from_draft.",
               "",
               "Requirements:",
               requirements
@@ -52,7 +52,7 @@ export function registerMikuprojectPrompts(server: McpServer): void {
             text: [
               "Use the mikuproject patch workflow for this change.",
               "Read mikuproject://spec/ai-json and the relevant state/projection resource first.",
-              "Create a patch document, validate it with mikuproject.ai_validate_patch, then apply it with mikuproject.state_apply_patch.",
+              "Create a patch document, validate it with mikuproject_ai_validate_patch, then apply it with mikuproject_state_apply_patch.",
               "Preserve diagnostics and artifact roles in the result.",
               "",
               `State resource or path: ${stateUri}`,

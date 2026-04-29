@@ -91,11 +91,11 @@ After `npm run build`, the server was checked with MCP Inspector CLI:
 npx -y @modelcontextprotocol/inspector --cli node packages/node/dist/index.js --method tools/list
 npx -y @modelcontextprotocol/inspector --cli node packages/node/dist/index.js --method resources/list
 npx -y @modelcontextprotocol/inspector --cli node packages/node/dist/index.js --method prompts/list
-npx -y @modelcontextprotocol/inspector --cli node packages/node/dist/index.js --method tools/call --tool-name mikuproject.ai_spec
+npx -y @modelcontextprotocol/inspector --cli node packages/node/dist/index.js --method tools/call --tool-name mikuproject_ai_spec
 ```
 
 Observed result: tool listing, resource listing, prompt listing, and the
-`mikuproject.ai_spec` tool call completed successfully over stdio.
+`mikuproject_ai_spec` tool call completed successfully over stdio.
 
 Compatibility note: the Inspector CLI run emitted npm warnings from transitive
 dependencies, but they did not prevent MCP connection or method execution.

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.report_all.input.schema.json",
-  "title": "mikuproject.report_all input",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject_export_workbook_json.input.schema.json",
+  "title": "mikuproject_export_workbook_json input",
   "type": "object",
   "additionalProperties": false,
   "required": ["workbookPath"],
@@ -14,7 +14,7 @@
     "outputPath": {
       "type": "string",
       "minLength": 1,
-      "description": "Optional path for the generated report bundle."
+      "description": "Optional path for the exported workbook JSON artifact."
     }
   }
 }

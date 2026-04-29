@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject.state_from_draft.input.schema.json",
-  "title": "mikuproject.state_from_draft input",
+  "$id": "https://igapyon.github.io/mikuproject-mcp/contract/tools/mikuproject_state_from_draft.input.schema.json",
+  "title": "mikuproject_state_from_draft input",
   "type": "object",
   "additionalProperties": false,
   "required": ["draftPath"],
