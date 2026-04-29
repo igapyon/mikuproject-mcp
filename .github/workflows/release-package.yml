@@ -1,9 +1,6 @@
 name: Release package tarball
 
 on:
-  push:
-    tags:
-      - "v*"
   release:
     types:
       - published
@@ -23,6 +20,7 @@ env:
 jobs:
   release-package:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.release.tag_name || github.event.inputs.tag_name, 'v')
 
     steps:
       - name: Check out repository
