@@ -244,14 +244,18 @@ describe("MCP server smoke", () => {
       const prompts = await fixture.client.listPrompts();
       const promptNames = prompts.prompts.map((prompt) => prompt.name).sort();
 
+      for (const promptName of promptNames) {
+        assert.match(promptName, /^[a-z0-9_-]+$/);
+      }
+
       assert.deepEqual(promptNames, [
-        "mikuproject.create_project_draft",
-        "mikuproject.review_artifact_diagnostics",
-        "mikuproject.revise_state_with_patch"
+        "mikuproject_create_project_draft",
+        "mikuproject_review_artifact_diagnostics",
+        "mikuproject_revise_state_with_patch"
       ]);
 
       const prompt = await fixture.client.getPrompt({
-        name: "mikuproject.revise_state_with_patch",
+        name: "mikuproject_revise_state_with_patch",
         arguments: {
           stateUri: "mikuproject://state/current",
           changeRequest: "Update task 123."

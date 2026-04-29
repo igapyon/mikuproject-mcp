@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export function registerMikuprojectPrompts(server: McpServer): void {
   server.registerPrompt(
-    "mikuproject.create_project_draft",
+    "mikuproject_create_project_draft",
     {
       title: "Create mikuproject draft",
       description: "Draft a mikuproject project_draft_view from user requirements.",
@@ -33,7 +33,7 @@ export function registerMikuprojectPrompts(server: McpServer): void {
   );
 
   server.registerPrompt(
-    "mikuproject.revise_state_with_patch",
+    "mikuproject_revise_state_with_patch",
     {
       title: "Revise mikuproject state",
       description: "Revise an existing workbook state through projection, patch, validation, and apply tools.",
@@ -67,7 +67,7 @@ export function registerMikuprojectPrompts(server: McpServer): void {
   );
 
   server.registerPrompt(
-    "mikuproject.review_artifact_diagnostics",
+    "mikuproject_review_artifact_diagnostics",
     {
       title: "Review mikuproject diagnostics",
       description: "Review a mikuproject artifact using saved operation diagnostics.",

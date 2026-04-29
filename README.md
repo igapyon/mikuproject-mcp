@@ -44,7 +44,7 @@ The package name prepared for the Node release is:
 ## Version Policy
 
 The MCP package version should generally match the bundled Node.js
-`mikuproject` CLI runtime version. For the `0.8.1` MCP release, the bundled
+`mikuproject` CLI runtime version. For the `0.8.2` MCP release, the bundled
 Node.js CLI still reports `mikuproject 0.8.0`; this MCP patch release updates
 the adapter contract for MCP client tool-name compatibility.
 
@@ -78,13 +78,13 @@ valid for that client environment.
 GitHub Releases may provide an npm package tarball asset named like:
 
 ```text
-igapyon-mikuproject-mcp-node-0.8.1.tgz
+igapyon-mikuproject-mcp-node-0.8.2.tgz
 ```
 
 After downloading the tarball, install it globally:
 
 ```sh
-npm install -g ./igapyon-mikuproject-mcp-node-0.8.1.tgz
+npm install -g ./igapyon-mikuproject-mcp-node-0.8.2.tgz
 ```
 
 Then configure your MCP client to run the installed command:
@@ -103,7 +103,7 @@ You can also run the release tarball directly with `npm exec` without a global
 install. Replace the version and URL with the release asset you want to use:
 
 ```sh
-npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.1/igapyon-mikuproject-mcp-node-0.8.1.tgz -- mikuproject-mcp
+npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.2/igapyon-mikuproject-mcp-node-0.8.2.tgz -- mikuproject-mcp
 ```
 
 Example MCP client configuration:
@@ -116,7 +116,7 @@ Example MCP client configuration:
       "args": [
         "exec",
         "--yes",
-        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.1/igapyon-mikuproject-mcp-node-0.8.1.tgz",
+        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.2/igapyon-mikuproject-mcp-node-0.8.2.tgz",
         "--",
         "mikuproject-mcp"
       ]
@@ -201,9 +201,9 @@ product-specific resource URIs.
 
 The server provides small product-specific prompts:
 
-- `mikuproject.create_project_draft`
-- `mikuproject.revise_state_with_patch`
-- `mikuproject.review_artifact_diagnostics`
+- `mikuproject_create_project_draft`
+- `mikuproject_revise_state_with_patch`
+- `mikuproject_review_artifact_diagnostics`
 
 Prompt text refers to the AI specification resource instead of duplicating the
 full product specification.
