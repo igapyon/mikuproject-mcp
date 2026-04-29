@@ -157,6 +157,31 @@ Implementation tasks:
       calls.
 - [x] Update README tool/resource lists after implementation.
 
+## VS Code / Copilot MCP Compatibility
+
+Keep callable MCP names compatible with clients that reject dotted names or
+cache package surfaces from release tarballs.
+
+- [x] Rename MCP prompt registration names from dotted names to underscore names:
+  - [x] `mikuproject.create_project_draft` ->
+        `mikuproject_create_project_draft`
+  - [x] `mikuproject.revise_state_with_patch` ->
+        `mikuproject_revise_state_with_patch`
+  - [x] `mikuproject.review_artifact_diagnostics` ->
+        `mikuproject_review_artifact_diagnostics`
+- [x] Do not change product resource URIs such as
+      `mikuproject://spec/ai-json`, `mikuproject://state/current`, or
+      `mikuproject://diagnostics/{operationId}`.
+- [x] Update prompt-related smoke and stdio e2e expectations so prompt names
+      follow the same compatibility regex as tool names.
+- [x] Update README and packaged README prompt-name documentation.
+- [x] Add release-package verification that starts the packed tarball and checks
+      `tools/list` includes Phase C report tools.
+- [x] Add release-package verification that starts the packed tarball and checks
+      `prompts/list` exposes underscore prompt names and no dotted prompt names.
+- [x] Verify with `npm run build`, `npm run test`, and package dry-run or packed
+      package surface checks.
+
 ## Resume Notes
 
 - Current implementation checkpoint: the first draft-to-state, projection,

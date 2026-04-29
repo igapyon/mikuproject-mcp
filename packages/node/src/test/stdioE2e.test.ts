@@ -58,7 +58,7 @@ describe("stdio MCP server E2E", () => {
       assert.equal(resource.contents.length, 1);
 
       const prompts = await client.listPrompts();
-      assert.ok(prompts.prompts.some((prompt) => prompt.name === "mikuproject.create_project_draft"));
+      assert.ok(prompts.prompts.some((prompt) => prompt.name === "mikuproject_create_project_draft"));
 
       const result = await client.callTool({
         name: "mikuproject_ai_detect_kind",

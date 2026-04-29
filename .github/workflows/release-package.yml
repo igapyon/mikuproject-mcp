@@ -48,6 +48,9 @@ jobs:
           mkdir -p release-assets
           npm --workspace packages/node pack --pack-destination release-assets
 
+      - name: Verify packed MCP surface
+        run: node packages/node/scripts/verify-package-surface.mjs release-assets/*.tgz
+
       - name: Upload package tarball to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
