@@ -316,7 +316,7 @@ HTTP deployment boundaries are explicitly designed.
       stateful sessions are enabled.
 - [x] Use request-scoped temporary workspaces for stateless HTTP default outputs
       and remove them after each response.
-- [ ] Define workspace isolation for HTTP sessions so requests cannot read or
+- [x] Define workspace isolation for HTTP sessions so requests cannot read or
       write arbitrary host paths.
 - [ ] Define authentication and authorization requirements for any non-localhost
       deployment.
@@ -334,7 +334,7 @@ HTTP deployment boundaries are explicitly designed.
 - [x] Keep core tool names, input schemas, result shapes, resource URI roles,
       artifact roles, diagnostics, and error categories aligned with local
       stdio.
-- [ ] Prefer upload IDs, session-scoped resource URIs, or controlled
+- [x] Prefer upload IDs, session-scoped resource URIs, or controlled
       workspace-relative paths over arbitrary host file paths in HTTP requests.
 - [x] Add an HTTP entrypoint separately from the stdio entrypoint after the
       above boundaries are documented.
@@ -446,13 +446,13 @@ default outputs, operation summaries, and diagnostics under the workspace.
       Content-mode HTTP calls should be able to return operation summary and
       diagnostics inline instead of always writing workspace files.
 - [x] Update HTTP transport behavior.
-      Avoid creating a request-scoped temporary workspace when a request can be
-      handled entirely with inline content. Keep the temporary workspace fallback
-      for path/resource workflows that still require generated files.
+      Reject client-provided host path arguments over HTTP. Use request-scoped
+      temporary workspace files only as adapter-internal runtime inputs for
+      inline multi-input operations.
 - [x] Update artifact and resource handling.
       Keep resource URIs for persisted workspace artifacts, and add result-only
       artifact handling for inline text and Base64 binary outputs.
-- [ ] Define response-size policy.
+- [x] Define response-size policy.
       Ensure large binary results respect `MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES`
       or a dedicated response-size limit.
 - [x] Add tests for content-mode runtime execution.
@@ -468,10 +468,10 @@ default outputs, operation summaries, and diagnostics under the workspace.
       mode as of `mikuproject 0.8.3.3` while Java support is separate unless
       verified.
 
-Resume note: draft/workbook/patch text content and XLSX Base64 contracts are
+Resume note: draft/workbook/state/patch text content and XLSX Base64 contracts are
 wired through schemas, tool registration, runtime argument mapping, and
-result-only artifacts. Patch content mode keeps `statePath` path-based because
-the runtime accepts only one stdin input per command. MCP smoke and HTTP E2E
-cover inline patch validation, apply-with-content-output, inline operation
-summary/diagnostics, and avoidance of request-scoped temporary workspace
-artifacts for content-mode HTTP tool calls.
+result-only artifacts. Patch content mode accepts `stateContent`; the adapter
+materializes it as a request-local runtime input because the runtime accepts only
+one stdin input per command. MCP smoke and HTTP E2E cover inline patch
+validation, apply-with-content-output, inline operation summary/diagnostics, and
+HTTP rejection of host path arguments.

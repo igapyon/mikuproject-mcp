@@ -75,10 +75,12 @@ Bundled Node.js `mikuproject 0.8.3.3` also supports stdin/stdout content mode:
 - binary output: `--out-base64 -`
 
 The MCP schemas expose this as inline text fields such as `draftContent`,
-`workbookContent`, `patchContent`, and `content`, plus `inputBase64` for XLSX
-imports. Patch content mode keeps `statePath` path-based and sends only the
-patch document on stdin with `--in -`, because the runtime accepts only one
-stdin input per command. Text outputs use `outputMode: "content"` and binary
+`workbookContent`, `stateContent`, `patchContent`, and `content`, plus
+`inputBase64` for XLSX imports. When a multi-input runtime command accepts only
+one stdin payload, the adapter may materialize one inline input as an
+adapter-owned temporary file and pass the other on stdin. For example,
+`stateContent` can become a request-local `--state` file while `patchContent`
+is sent with `--in -`. Text outputs use `outputMode: "content"` and binary
 outputs use `outputMode: "base64"`. Path and inline input fields are mutually
 exclusive. Content/base64 output mode does not accept `outputPath`; the adapter
 returns a result-only artifact with `text` or `base64` and `mimeType` instead.

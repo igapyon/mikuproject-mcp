@@ -4,14 +4,16 @@
   "title": "mikuproject_ai_validate_patch input",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "statePath"
-  ],
   "properties": {
     "statePath": {
       "type": "string",
       "minLength": 1,
       "description": "Path to a mikuproject workbook JSON state passed to the upstream CLI as --state."
+    },
+    "stateContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline mikuproject workbook JSON state content. The adapter materializes it as a request-local runtime input when the upstream CLI requires --state as a path."
     },
     "patchPath": {
       "type": "string",
@@ -24,26 +26,54 @@
       "description": "Inline mikuproject patch JSON content passed to the upstream CLI on stdin with --in -."
     }
   },
-  "oneOf": [
+  "allOf": [
     {
-      "required": [
-        "patchPath"
-      ],
-      "not": {
-        "required": [
-          "patchContent"
-        ]
-      }
+      "oneOf": [
+        {
+          "required": [
+            "statePath"
+          ],
+          "not": {
+            "required": [
+              "stateContent"
+            ]
+          }
+        },
+        {
+          "required": [
+            "stateContent"
+          ],
+          "not": {
+            "required": [
+              "statePath"
+            ]
+          }
+        }
+      ]
     },
     {
-      "required": [
-        "patchContent"
-      ],
-      "not": {
-        "required": [
-          "patchPath"
-        ]
-      }
+      "oneOf": [
+        {
+          "required": [
+            "patchPath"
+          ],
+          "not": {
+            "required": [
+              "patchContent"
+            ]
+          }
+        },
+        {
+          "required": [
+            "patchContent"
+          ],
+          "not": {
+            "required": [
+              "patchPath"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

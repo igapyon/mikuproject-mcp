@@ -179,11 +179,20 @@ describe("tool input JSON Schemas", () => {
     const validatePatch = ajv.compile(schemas.mikuproject_ai_validate_patch);
     assert.equal(
       validatePatch({
-        statePath: "workbook.json",
+        stateContent: "{\"kind\":\"mikuproject_workbook_json\"}",
         patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}"
       }),
       true,
-      "inline patch content should be valid for validation"
+      "inline state and patch content should be valid for validation"
+    );
+    assert.equal(
+      validatePatch({
+        statePath: "workbook.json",
+        stateContent: "{\"kind\":\"mikuproject_workbook_json\"}",
+        patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}"
+      }),
+      false,
+      "state path and content should be mutually exclusive"
     );
     assert.equal(
       validatePatch({
@@ -198,16 +207,16 @@ describe("tool input JSON Schemas", () => {
     const applyPatch = ajv.compile(schemas.mikuproject_state_apply_patch);
     assert.equal(
       applyPatch({
-        statePath: "workbook.json",
+        stateContent: "{\"kind\":\"mikuproject_workbook_json\"}",
         patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}",
         outputMode: "content"
       }),
       true,
-      "inline patch content and content output should be valid for apply"
+      "inline state, inline patch, and content output should be valid for apply"
     );
     assert.equal(
       applyPatch({
-        statePath: "workbook.json",
+        stateContent: "{\"kind\":\"mikuproject_workbook_json\"}",
         patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}",
         outputPath: "next-workbook.json",
         outputMode: "content"

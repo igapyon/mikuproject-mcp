@@ -171,8 +171,9 @@ local ephemeral port.
 Observed result: initialize, tool listing, resource reading, prompt listing, and
 the `mikuproject_ai_detect_kind` tool call completed successfully over
 Streamable HTTP. The HTTP E2E test also confirmed that an invalid non-local
-`Origin` header is rejected with HTTP 403, oversized request bodies are rejected,
-and request-scoped temporary HTTP workspaces are removed after tool responses.
+`Origin` header is rejected with HTTP 403, oversized request and response bodies
+are rejected, host path tool arguments are rejected, and request-scoped
+temporary HTTP workspaces are removed after tool responses.
 
 ## Implementation Order
 

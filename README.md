@@ -95,23 +95,34 @@ MIKUPROJECT_MCP_HTTP_HOST=127.0.0.1
 MIKUPROJECT_MCP_HTTP_PORT=3000
 MIKUPROJECT_MCP_HTTP_ENDPOINT=/mcp
 MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES=52428800
+MIKUPROJECT_MCP_HTTP_MAX_RESPONSE_BYTES=52428800
 MIKUPROJECT_MCP_HTTP_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 The current HTTP transport is stateless. It does not issue `Mcp-Session-Id`,
 does not keep durable project state, and creates a fresh MCP server instance for
-each HTTP request. When a tool needs a default output location, the HTTP
-entrypoint uses a request-scoped temporary workspace and removes it after the
-response completes. Content-mode tool calls that do not need default output
-files skip that request-scoped temporary workspace and return operation summary
-and diagnostics as inline result artifacts. Client-owned project files remain
-the source of truth.
+each HTTP request. HTTP tool calls do not accept client-provided host file path
+arguments such as `statePath`, `workbookPath`, `inputPath`, or `outputPath`.
+Use inline content fields such as `draftContent`, `workbookContent`,
+`stateContent`, `patchContent`, `content`, or `inputBase64`, and use
+`outputMode: "content"` or `outputMode: "base64"` when the result should be
+returned directly.
 
-Because the HTTP temporary workspace is removed after each response, do not rely
-on returned server-local artifact paths as durable storage. Prefer content-mode
-outputs for stateless HTTP workflows that can carry the response body directly.
-Hosted or remote profiles that need downloadable artifacts should add an
-explicit upload, download, or content-return policy.
+The HTTP entrypoint still creates a request-scoped temporary workspace for
+adapter-internal runtime files when the upstream CLI requires one input as a
+path. For example, a request can send `stateContent` and `patchContent`; the
+adapter may materialize `stateContent` as a temporary runtime input while
+passing `patchContent` on stdin. This workspace is removed after the response
+completes and is not a durable storage location. Hosted or remote profiles that
+need downloadable artifacts should add an explicit upload, download, or
+content-return policy.
+
+HTTP request bodies are limited by `MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES`.
+HTTP response bodies are limited by `MIKUPROJECT_MCP_HTTP_MAX_RESPONSE_BYTES`,
+which defaults to the same 50 MiB limit. If a generated content-mode or Base64
+response would exceed the response limit, the HTTP entrypoint returns HTTP 413
+with a JSON-RPC error. Use a future retained-download policy for large generated
+artifacts.
 
 The HTTP server rejects non-local `Origin` headers unless they are listed in
 `MIKUPROJECT_MCP_HTTP_ALLOWED_ORIGINS`. Do not bind it to a public interface
@@ -198,13 +209,14 @@ default outputs under `MIKUPROJECT_MCP_WORKSPACE` when `outputPath` is omitted.
 
 The bundled Node.js `mikuproject 0.8.3.3` runtime also supports content mode for
 operations whose schemas expose inline fields. Text inputs can use
-`draftContent`, `workbookContent`, `patchContent`, or `content`; XLSX imports
-can use `inputBase64`. Patch content mode keeps `statePath` path-based because
-the runtime accepts only one stdin input per command. Text outputs can set
-`outputMode` to `content`; binary outputs can set `outputMode` to `base64`. In
-those modes, the generated artifact is returned in the tool result as `text` or
-`base64` with a `mimeType`, and no default output file is created for that
-artifact.
+`draftContent`, `workbookContent`, `stateContent`, `patchContent`, or
+`content`; XLSX imports can use `inputBase64`. When the upstream runtime accepts
+only one stdin input for a multi-input operation, the adapter can materialize
+one inline input as an adapter-owned temporary file while keeping host file paths
+out of the HTTP contract. Text outputs can set `outputMode` to `content`; binary
+outputs can set `outputMode` to `base64`. In those modes, the generated artifact
+is returned in the tool result as `text` or `base64` with a `mimeType`, and no
+default output file is created for that artifact.
 
 Java runtime execution remains path-mode only until equivalent stdin/stdout and
 Base64 behavior is verified. When content mode is requested, the adapter selects

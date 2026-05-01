@@ -5,10 +5,11 @@ transport to the first local stdio MVP.
 
 As of 2026-05-01, `mikuproject-mcp` has a first localhost-oriented stateless MCP
 Streamable HTTP entrypoint in addition to the local stdio entrypoint. This HTTP
-entrypoint is an execution adapter for controlled local use. It uses a
-request-scoped temporary workspace for default outputs and removes that
-workspace after the response completes. It is not a hosted multi-user deployment
-and does not change the source-of-truth policy for project data.
+entrypoint is an execution adapter for controlled local use. It rejects
+client-provided host file path arguments and uses request-scoped temporary files
+only as adapter-internal runtime inputs when the upstream CLI requires a path.
+It is not a hosted multi-user deployment and does not change the source-of-truth
+policy for project data.
 
 Hosted or remotely reachable HTTP transport should be reconsidered only after
 these boundaries are explicitly designed:
@@ -43,10 +44,11 @@ diagnostic references, not durable storage handles. A hosted or remote HTTP
 profile that needs clients to retrieve generated artifacts after a tool response
 must add an explicit download, resource-retention, or content-return policy.
 
-HTTP requests should not rely on arbitrary host filesystem paths. Use inline
-JSON for small inputs, upload identifiers for larger files, session-scoped
-resource URIs, or controlled workspace-relative paths inside server-managed
-temporary workspaces.
+HTTP requests should not rely on arbitrary host filesystem paths. The current
+entrypoint rejects host path arguments for `tools/call`; use inline JSON or
+Base64 content fields instead. Future hosted profiles can add upload
+identifiers, session-scoped resource URIs, or controlled workspace-relative
+paths inside server-managed temporary workspaces.
 
 An HTTP deployment must preserve the same core tool names, input schemas, result
 shapes, resource URI roles, artifact roles, diagnostics, and error categories as

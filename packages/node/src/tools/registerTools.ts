@@ -402,7 +402,8 @@ export function registerMikuprojectTools(server: McpServer): void {
       title: "Validate mikuproject patch",
       description: "Validates a mikuproject patch document against a workbook JSON state.",
       inputSchema: {
-        statePath: z.string().min(1),
+        statePath: z.string().min(1).optional(),
+        stateContent: z.string().min(1).optional(),
         patchPath: z.string().min(1).optional(),
         patchContent: z.string().min(1).optional()
       },
@@ -410,10 +411,14 @@ export function registerMikuprojectTools(server: McpServer): void {
         contractInputSchema: loadToolInputSchema("mikuproject_ai_validate_patch")
       }
     },
-    async ({ statePath, patchPath, patchContent }) => {
+    async ({ statePath, stateContent, patchPath, patchContent }) => {
+      const effectiveStatePath = statePath ?? materializeInlineInput("state", stateContent);
+      if (statePath && stateContent !== undefined) {
+        throw new Error("statePath and stateContent are mutually exclusive.");
+      }
       const runtimeResult = await runRuntimeOperation({
         name: "ai_validate_patch",
-        statePath,
+        statePath: effectiveStatePath,
         patchPath,
         patchContent
       });
@@ -423,7 +428,8 @@ export function registerMikuprojectTools(server: McpServer): void {
         operation: "mikuproject_ai_validate_patch",
         diagnostics: runtimeResult.diagnostics,
         input: {
-          statePath,
+          statePath: statePath ?? "[inline-state]",
+          stateContent: stateContent === undefined ? undefined : "[inline]",
           patchPath,
           patchContent: patchContent === undefined ? undefined : "[inline]"
         },
@@ -440,7 +446,8 @@ export function registerMikuprojectTools(server: McpServer): void {
       title: "Apply mikuproject patch",
       description: "Applies a mikuproject patch document to a workbook JSON state.",
       inputSchema: {
-        statePath: z.string().min(1),
+        statePath: z.string().min(1).optional(),
+        stateContent: z.string().min(1).optional(),
         patchPath: z.string().min(1).optional(),
         patchContent: z.string().min(1).optional(),
         outputPath: z.string().min(1).optional(),
@@ -450,15 +457,19 @@ export function registerMikuprojectTools(server: McpServer): void {
         contractInputSchema: loadToolInputSchema("mikuproject_state_apply_patch")
       }
     },
-    async ({ statePath, patchPath, patchContent, outputPath, outputMode }) => {
+    async ({ statePath, stateContent, patchPath, patchContent, outputPath, outputMode }) => {
       const workspace = resolveWorkspaceConfig();
       ensureWorkspace(workspace);
+      const effectiveStatePath = statePath ?? materializeInlineInput("state", stateContent);
+      if (statePath && stateContent !== undefined) {
+        throw new Error("statePath and stateContent are mutually exclusive.");
+      }
       const defaultStateOutputPath = `${workspace.root}/mikuproject/state/next-workbook.json`;
       const stateOutputPath = resolveOutputPath(outputPath, defaultStateOutputPath, outputMode);
       ensureOutputParentDirectory(stateOutputPath);
       const runtimeResult = await runRuntimeOperation({
         name: "state_apply_patch",
-        statePath,
+        statePath: effectiveStatePath,
         patchPath,
         patchContent,
         outputPath: stateOutputPath,
@@ -470,7 +481,8 @@ export function registerMikuprojectTools(server: McpServer): void {
         operation: "mikuproject_state_apply_patch",
         diagnostics: runtimeResult.diagnostics,
         input: {
-          statePath,
+          statePath: statePath ?? "[inline-state]",
+          stateContent: stateContent === undefined ? undefined : "[inline]",
           patchPath,
           patchContent: patchContent === undefined ? undefined : "[inline]",
           outputMode,
@@ -1199,6 +1211,19 @@ function ensureOutputParentDirectory(outputPath: string | undefined): void {
   if (outputPath) {
     ensureParentDirectory(outputPath);
   }
+}
+
+function materializeInlineInput(kind: string, content: string | undefined): string {
+  if (content === undefined) {
+    throw new Error(`${kind}Path or ${kind}Content is required.`);
+  }
+
+  const workspace = resolveWorkspaceConfig();
+  ensureWorkspace(workspace);
+  const path = `${workspace.root}/mikuproject/http-input/${randomUUID()}-${kind}.json`;
+  ensureParentDirectory(path);
+  writeFileSync(path, content);
+  return path;
 }
 
 function asPersistedTextResult(result: CommonResult) {

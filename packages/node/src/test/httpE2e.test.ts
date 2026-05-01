@@ -16,31 +16,27 @@ describe("Streamable HTTP MCP server E2E", () => {
     const serverEntryPoint = resolve(currentDir, "../http.js");
     const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-e2e-"));
     const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
-    const inputPath = join(tempRoot, "input.txt");
     const workspacePath = join(tempRoot, "workspace");
 
     writeFileSync(
       runtimePath,
       [
-        "import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';",
-        "import { dirname } from 'node:path';",
+        "let stdin = '';",
+        "process.stdin.setEncoding('utf8');",
+        "for await (const chunk of process.stdin) stdin += chunk;",
         "const args = process.argv.slice(2);",
-        "if (args.join(' ') === 'ai detect-kind --in ' + args[3]) {",
-        "  console.log(JSON.stringify({ kind: 'text', path: args[3] }));",
+        "if (args.join(' ') === 'ai detect-kind --in -') {",
+        "  console.log(JSON.stringify({ kind: 'text', content: stdin }));",
         "  process.exit(0);",
         "}",
-        "if (args[0] === 'state' && args[1] === 'from-draft') {",
-        "  const draft = readFileSync(args[3], 'utf8');",
-        "  mkdirSync(dirname(args[5]), { recursive: true });",
-        "  writeFileSync(args[5], JSON.stringify({ kind: 'mikuproject_workbook_json', draft }, null, 2));",
-        "  console.log(JSON.stringify({ outputPath: args[5] }));",
+        "if (args.join(' ') === 'state from-draft --in - --out -') {",
+        "  process.stdout.write(JSON.stringify({ kind: 'mikuproject_workbook_json', draft: stdin }, null, 2));",
         "  process.exit(0);",
         "}",
         "console.error('unexpected args: ' + args.join(' '));",
         "process.exit(2);"
       ].join("\n")
     );
-    writeFileSync(inputPath, "project draft");
 
     const child = spawn(process.execPath, [serverEntryPoint], {
       cwd: repositoryRoot,
@@ -88,7 +84,7 @@ describe("Streamable HTTP MCP server E2E", () => {
         const result = await client.callTool({
           name: "mikuproject_ai_detect_kind",
           arguments: {
-            path: inputPath
+            content: "project draft"
           }
         });
         const content = assertTextToolContent(result.content);
@@ -101,17 +97,18 @@ describe("Streamable HTTP MCP server E2E", () => {
         const stateResult = await client.callTool({
           name: "mikuproject_state_from_draft",
           arguments: {
-            draftPath: inputPath
+            draftContent: "project draft",
+            outputMode: "content"
           }
         });
         const stateContent = assertTextToolContent(stateResult.content);
         const stateParsed = JSON.parse(stateContent[0].text);
         const httpWorkspaceRoot = stateParsed.workspace.root;
-        const outputPath = stateParsed.artifacts[0].path;
 
         assert.equal(stateParsed.ok, true);
         assert.match(httpWorkspaceRoot, /mikuproject-mcp-http-/);
-        await waitForPathRemoved(outputPath);
+        assert.equal(stateParsed.artifacts[0].role, "workbook_state");
+        assert.equal(JSON.parse(stateParsed.artifacts[0].text).draft, "project draft");
         await waitForPathRemoved(httpWorkspaceRoot);
       } finally {
         await client.close();
@@ -127,7 +124,6 @@ describe("Streamable HTTP MCP server E2E", () => {
     const serverEntryPoint = resolve(currentDir, "../http.js");
     const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-content-e2e-"));
     const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
-    const statePath = join(tempRoot, "workbook.json");
     const workspacePath = join(tempRoot, "workspace");
 
     writeFileSync(
@@ -147,7 +143,6 @@ describe("Streamable HTTP MCP server E2E", () => {
         "process.stdout.write(JSON.stringify({ kind: 'mikuproject_workbook_json', state, patch }, null, 2));"
       ].join("\n")
     );
-    writeFileSync(statePath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "HTTP" } }));
 
     const child = spawn(process.execPath, [serverEntryPoint], {
       cwd: repositoryRoot,
@@ -174,7 +169,7 @@ describe("Streamable HTTP MCP server E2E", () => {
         const result = await client.callTool({
           name: "mikuproject_state_apply_patch",
           arguments: {
-            statePath,
+            stateContent: JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "HTTP" } }),
             patchContent: JSON.stringify({ kind: "patch_json", operations: [{ op: "test" }] }),
             outputMode: "content"
           }
@@ -183,7 +178,7 @@ describe("Streamable HTTP MCP server E2E", () => {
         const parsed = JSON.parse(content[0].text);
 
         assert.equal(parsed.ok, true);
-        assert.equal(parsed.workspace.root, workspacePath);
+        assert.match(parsed.workspace.root, /mikuproject-mcp-http-/);
         assert.equal(parsed.artifacts[0].role, "workbook_state");
         assert.equal(parsed.artifacts[0].mimeType, "application/json");
         assert.equal("path" in parsed.artifacts[0], false);
@@ -200,6 +195,7 @@ describe("Streamable HTTP MCP server E2E", () => {
         assert.equal(existsSync(join(workspacePath, "mikuproject/state/next-workbook.json")), false);
         assert.equal(existsSync(join(workspacePath, "mikuproject/summary")), false);
         assert.equal(existsSync(join(workspacePath, "mikuproject/diagnostics")), false);
+        await waitForPathRemoved(parsed.workspace.root);
       } finally {
         await client.close();
       }
@@ -275,7 +271,8 @@ describe("Streamable HTTP MCP server E2E", () => {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          "content-type": "application/json"
+          "content-type": "application/json",
+          "accept": "application/json, text/event-stream"
         },
         body: JSON.stringify({
           jsonrpc: "2.0",
@@ -295,6 +292,116 @@ describe("Streamable HTTP MCP server E2E", () => {
       assert.equal(response.status, 413);
       const body = await response.json();
       assert.equal(body.error.message, "Request body exceeds configured limit");
+    } finally {
+      child.kill("SIGTERM");
+    }
+  });
+
+  it("rejects host path arguments over HTTP", async () => {
+    const currentDir = dirname(fileURLToPath(import.meta.url));
+    const repositoryRoot = resolve(currentDir, "../../../..");
+    const serverEntryPoint = resolve(currentDir, "../http.js");
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-path-policy-e2e-"));
+    const child = spawn(process.execPath, [serverEntryPoint], {
+      cwd: repositoryRoot,
+      env: {
+        ...process.env,
+        MIKUPROJECT_MCP_HTTP_HOST: "127.0.0.1",
+        MIKUPROJECT_MCP_HTTP_PORT: "0",
+        MIKUPROJECT_MCP_WORKSPACE: join(tempRoot, "workspace")
+      }
+    });
+
+    try {
+      const endpoint = await waitForHttpEndpoint(child);
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "accept": "application/json, text/event-stream",
+          "mcp-protocol-version": "2025-06-18"
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: {
+            name: "mikuproject_ai_detect_kind",
+            arguments: {
+              path: "/etc/passwd"
+            }
+          }
+        })
+      });
+
+      assert.equal(response.status, 400);
+      const body = await response.json();
+      assert.equal(body.error.message, "HTTP tools/call does not accept host path argument: path");
+    } finally {
+      child.kill("SIGTERM");
+    }
+  });
+
+  it("rejects oversized HTTP response bodies", async () => {
+    const currentDir = dirname(fileURLToPath(import.meta.url));
+    const repositoryRoot = resolve(currentDir, "../../../..");
+    const serverEntryPoint = resolve(currentDir, "../http.js");
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-response-size-e2e-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { readFileSync } from 'node:fs';",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'state apply-patch --state ' + args[3] + ' --in - --out -') {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "readFileSync(args[3], 'utf8');",
+        "process.stdout.write(JSON.stringify({ kind: 'mikuproject_workbook_json', payload: 'x'.repeat(4096) }));"
+      ].join("\n")
+    );
+
+    const child = spawn(process.execPath, [serverEntryPoint], {
+      cwd: repositoryRoot,
+      env: {
+        ...process.env,
+        MIKUPROJECT_MCP_HTTP_HOST: "127.0.0.1",
+        MIKUPROJECT_MCP_HTTP_PORT: "0",
+        MIKUPROJECT_MCP_HTTP_MAX_RESPONSE_BYTES: "2048",
+        MIKUPROJECT_MCP_RUNTIME_NODE: runtimePath,
+        MIKUPROJECT_MCP_WORKSPACE: join(tempRoot, "workspace")
+      }
+    });
+
+    try {
+      const endpoint = await waitForHttpEndpoint(child);
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "accept": "application/json, text/event-stream",
+          "mcp-protocol-version": "2025-06-18"
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: {
+            name: "mikuproject_state_apply_patch",
+            arguments: {
+              stateContent: JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "HTTP" } }),
+              patchContent: JSON.stringify({ kind: "patch_json", operations: [] }),
+              outputMode: "content"
+            }
+          }
+        })
+      });
+
+      assert.equal(response.status, 413);
+      const body = await response.json();
+      assert.equal(body.error.message, "Response body exceeds configured limit");
     } finally {
       child.kill("SIGTERM");
     }
