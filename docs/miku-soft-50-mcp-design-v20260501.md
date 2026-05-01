@@ -340,21 +340,33 @@ Recommended first implementation shape:
   durable per-client state is explicitly needed
 - create or reset MCP server state per request when the product operation can be
   handled as input-to-output processing
-- use request-scoped temporary workspaces for default output files in stateless
-  HTTP profiles, and remove them after the response completes
+- do not accept client-provided host file path arguments in HTTP `tools/call`
+  when inline content or controlled resource references can represent the input
+- prefer inline JSON/text content and Base64 content for stateless HTTP calls
+- use request-scoped temporary workspaces only for adapter-internal runtime
+  files, such as materializing one inline input when an upstream CLI accepts
+  only one stdin payload for a multi-input operation
+- remove request-scoped temporary workspaces after the response completes
 - do not issue `Mcp-Session-Id` in the stateless MVP
 - validate `Origin` and reject non-local origins unless explicitly allowlisted
 - set an HTTP request body size limit before passing input to the MCP transport
+- set an HTTP response body size limit before returning large content-mode or
+  Base64 artifacts
 - keep tool names, input schemas, resource URIs, prompt names, result shapes,
   diagnostics, and artifact roles identical to stdio
 - verify initialize, tool listing, representative tool calls, resource reads,
-  prompt listing, invalid-origin rejection, body-size rejection, and temporary
-  workspace cleanup through an HTTP client test
+  prompt listing, invalid-origin rejection, request-size rejection,
+  response-size rejection, host-path rejection, and temporary workspace cleanup
+  through an HTTP client test
 
 If a stateless HTTP profile deletes temporary workspaces immediately after each
 response, returned server-local paths are not durable artifact handles. Hosted
 profiles that need clients to retrieve generated files should add explicit
 content-return, download, or resource-retention behavior.
+
+Invalid session behavior is not applicable to a stateless MVP that does not
+issue `Mcp-Session-Id`. If a later profile enables stateful HTTP sessions,
+invalid session behavior should be designed and tested with that session model.
 
 This shape is intentionally not a hosted multi-user design. Remote deployment
 still requires the broader HTTP server principles above: authentication,
@@ -508,7 +520,11 @@ MCP servers distinguish several kinds of data.
 
 These roles should not be collapsed only because they are all represented as JSON or files.
 
-For local stdio deployment, file paths can be a practical state boundary. For HTTP deployment, session-scoped resource URIs or upload identifiers are usually safer than arbitrary host paths.
+For local stdio deployment, file paths can be a practical state boundary. For
+HTTP deployment, inline content, Base64 content, session-scoped resource URIs,
+or upload identifiers are usually safer than arbitrary host paths. Temporary
+files created from inline HTTP inputs should be treated as adapter-internal
+runtime bridges, not as durable artifacts or public resource handles.
 
 For products such as `mikuproject`, `mikuproject_workbook_json` may be the practical MCP state handoff format, while `MS Project XML` remains the product's semantic base. The MCP server should make that distinction visible in naming, docs, and tool descriptions.
 
@@ -830,12 +846,17 @@ shapes, resources, diagnostics, and local workspace behavior.
 implementation in the current Node server documentation. If a concrete future
 requirement appears, handle that implementation design at that time.
 
-If `mikuproject-mcp` later adds an HTTP server, it should keep the same core
-tool names and follow the general miku MCP execution model. The HTTP server
-should be a short-lived adapter for client-owned project data: accept explicit
-workbook/WBS/patch inputs or uploads, invoke the existing `mikuproject` runtime
-commands, and return generated artifacts, diagnostics, diffs, summaries, or
-updated state for the client to store. It should add session-scoped resources,
-upload handling, authentication, storage policy, and artifact lifecycle
-management rather than changing the product operation vocabulary or becoming a
-durable project-state service.
+As of 2026-05-01, `mikuproject-mcp` includes a localhost-oriented stateless
+Streamable HTTP entrypoint. It keeps the same core tool names and follows the
+general miku MCP execution model. The HTTP entrypoint is a short-lived adapter
+for client-owned project data: it accepts explicit inline workbook/WBS/patch
+inputs or Base64 content, invokes the existing `mikuproject` runtime commands,
+and returns generated artifacts, diagnostics, diffs, summaries, or updated state
+for the client to store.
+
+The current HTTP entrypoint does not issue `Mcp-Session-Id`, rejects
+client-provided host path arguments for `tools/call`, and uses request-scoped
+temporary files only as adapter-internal runtime inputs when the upstream CLI
+requires a path. A hosted or non-localhost profile remains out of scope until
+authentication, storage policy, upload handling, artifact lifecycle management,
+audit, and runtime isolation are explicitly designed.
