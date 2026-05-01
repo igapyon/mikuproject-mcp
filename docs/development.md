@@ -126,9 +126,10 @@ package unless the release is explicitly Java-runtime-only.
 
 Before packaging, `prepack` builds the TypeScript output and copies the
 repository-level `README.md`, `LICENSE`, `contract/`, and `runtime/` assets into
-the package directory so that the published tarball is self-contained.
+the package directory so that the packed tarball is self-contained.
 
-Dry-run the package contents before any publish:
+Dry-run the package contents before npm publication or GitHub Release tarball
+upload:
 
 ```sh
 npm --workspace packages/node pack --dry-run
