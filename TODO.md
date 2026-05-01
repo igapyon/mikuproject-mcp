@@ -1,7 +1,7 @@
 # TODO
 
 This repository is the MCP server layer described in
-`docs/miku-soft-50-mcp-design-v20260429.md`.
+`docs/miku-soft-50-mcp-design-v20260501.md`.
 
 The semantic center remains upstream `mikuproject`. This repository owns the MCP
 entrypoints, tool/resource/prompt definitions, schemas, transport handling,
@@ -18,7 +18,7 @@ workspace policy, storage policy, and runtime adapter code.
 
 ## Before Implementation
 
-- [x] Keep `docs/miku-soft-50-mcp-design-v20260429.md` as the current MCP design
+- [x] Keep `docs/miku-soft-50-mcp-design-v20260501.md` as the current MCP design
       document.
 - [x] Fix initial implementation parameters:
   - [x] package manager: `npm`
@@ -291,9 +291,59 @@ cache package surfaces from release tarballs.
 
 - [x] Add file import/export tools after the core state workflow is stable.
 - [x] Add report-generation tools after the core state workflow is stable.
-- [x] Consider HTTP transport only after session identity, workspace isolation,
-      authentication, storage policy, upload lifecycle, artifact lifecycle, size
-      limits, cleanup, audit, and runtime isolation are explicitly designed.
+
+## HTTP Transport Prerequisites
+
+The first localhost-only stateless MCP Streamable HTTP entrypoint is
+implemented while keeping the existing local stdio entrypoint supported. Do not
+expand it into a remotely reachable or hosted deployment until the remaining
+HTTP deployment boundaries are explicitly designed.
+
+- [x] Set the HTTP data ownership policy: canonical WBS/workbook/project files
+      are owned and persisted by the MCP client side.
+- [x] Set the HTTP server role: an ephemeral execution adapter that receives
+      explicit inputs, invokes the existing `mikuproject` runtime commands, and
+      returns generated artifacts or updated state.
+- [x] Do not make the HTTP server a durable project database or the source of
+      truth for current project state.
+- [x] Define mutation-style HTTP semantics as input-to-output operations: given
+      base state plus patch/edit input, return updated state, diff, summary, and
+      diagnostics for the client to persist.
+- [x] Decide the first HTTP deployment shape:
+      localhost-only development server, remotely reachable server, or both.
+- [x] Decide whether the HTTP transport is stateless or stateful.
+- [x] Define session identity behavior, including `Mcp-Session-Id` handling if
+      stateful sessions are enabled.
+- [x] Use request-scoped temporary workspaces for stateless HTTP default outputs
+      and remove them after each response.
+- [ ] Define workspace isolation for HTTP sessions so requests cannot read or
+      write arbitrary host paths.
+- [ ] Define authentication and authorization requirements for any non-localhost
+      deployment.
+- [x] Define `Origin` validation and localhost bind policy to reduce DNS
+      rebinding risk.
+- [ ] Define storage policy for session state, imported files, generated
+      artifacts, summaries, and diagnostics.
+- [ ] Define upload lifecycle, including accepted file types, upload IDs, maximum
+      request sizes, and cleanup timing.
+- [ ] Define generated artifact lifecycle, including retention, download/resource
+      access, maximum output sizes, and cleanup timing.
+- [ ] Define audit or trace policy for HTTP requests and runtime invocations.
+- [ ] Define runtime isolation for upstream CLI/runtime execution triggered by
+      HTTP requests.
+- [x] Keep core tool names, input schemas, result shapes, resource URI roles,
+      artifact roles, diagnostics, and error categories aligned with local
+      stdio.
+- [ ] Prefer upload IDs, session-scoped resource URIs, or controlled
+      workspace-relative paths over arbitrary host file paths in HTTP requests.
+- [x] Add an HTTP entrypoint separately from the stdio entrypoint after the
+      above boundaries are documented.
+- [ ] Add HTTP verification for initialize, tools/list, tools/call,
+      resources/list, resources/read, prompts/list, prompts/get, invalid
+      session, invalid origin, oversized body, and workspace escape attempts.
+- [x] After implementing and verifying HTTP support in `mikuproject-mcp`, update
+      `docs/miku-soft-50-mcp-design-v20260501.md` with the concrete lessons
+      learned so future miku MCP servers can follow tested guidance.
 
 ## Release Readiness
 

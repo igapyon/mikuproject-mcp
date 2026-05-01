@@ -1,11 +1,12 @@
 # mikuproject-mcp
 
-`mikuproject-mcp` is a local MCP server adapter for `mikuproject`.
+`mikuproject-mcp` is an MCP server adapter for `mikuproject`.
 
 It exposes `mikuproject` operations to MCP clients as tools, resources, and
-prompts. The server is intended for local stdio use first. It does not call
-external AI services, does not start a network listener, and does not replace
-the upstream `mikuproject` product logic.
+prompts. The primary entrypoint is local stdio. A localhost-oriented Streamable
+HTTP entrypoint is also available for clients that need HTTP transport. The
+server does not call external AI services and does not replace the upstream
+`mikuproject` product logic.
 
 ## Status
 
@@ -29,10 +30,16 @@ npm install
 npm run build
 ```
 
-The MCP server entrypoint after build is:
+The stdio MCP server entrypoint after build is:
 
 ```text
 packages/node/dist/index.js
+```
+
+The Streamable HTTP entrypoint after build is:
+
+```text
+packages/node/dist/http.js
 ```
 
 The package name prepared for the Node release is:
@@ -72,6 +79,42 @@ Example:
 
 If your MCP client runs from a different working directory, use paths that are
 valid for that client environment.
+
+## Streamable HTTP Usage
+
+The HTTP entrypoint is intended for local or otherwise explicitly controlled
+deployments. By default it binds to `127.0.0.1:3000` and exposes a single MCP
+endpoint at `/mcp`.
+
+```sh
+node packages/node/dist/http.js
+```
+
+You can configure the listener with environment variables:
+
+```sh
+MIKUPROJECT_MCP_HTTP_HOST=127.0.0.1
+MIKUPROJECT_MCP_HTTP_PORT=3000
+MIKUPROJECT_MCP_HTTP_ENDPOINT=/mcp
+MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES=10485760
+MIKUPROJECT_MCP_HTTP_ALLOWED_ORIGINS=http://localhost:3000
+```
+
+The current HTTP transport is stateless. It does not issue `Mcp-Session-Id`,
+does not keep durable project state, and creates a fresh MCP server instance for
+each HTTP request. When a tool needs a default output location, the HTTP
+entrypoint uses a request-scoped temporary workspace and removes it after the
+response completes. Client-owned project files remain the source of truth.
+
+Because the HTTP temporary workspace is removed after each response, do not rely
+on returned server-local artifact paths as durable storage. Hosted or remote
+profiles that need downloadable artifacts should add an explicit upload,
+download, or content-return policy.
+
+The HTTP server rejects non-local `Origin` headers unless they are listed in
+`MIKUPROJECT_MCP_HTTP_ALLOWED_ORIGINS`. Do not bind it to a public interface
+without a separate authentication, workspace isolation, upload, storage,
+cleanup, audit, and runtime isolation design.
 
 ## Release Tarball Usage
 
@@ -238,4 +281,4 @@ isolation.
 ## Developer Documentation
 
 Developer-facing repository layout, implementation order, and contract notes are
-in `docs/development.md` and `docs/miku-soft-50-mcp-design-v20260429.md`.
+in `docs/development.md` and `docs/miku-soft-50-mcp-design-v20260501.md`.

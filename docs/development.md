@@ -100,6 +100,20 @@ Observed result: tool listing, resource listing, prompt listing, and the
 Compatibility note: the Inspector CLI run emitted npm warnings from transitive
 dependencies, but they did not prevent MCP connection or method execution.
 
+## Streamable HTTP Verification
+
+Verification date: 2026-05-01.
+
+After `npm run build`, the test suite starts `packages/node/dist/http.js` with
+`MIKUPROJECT_MCP_HTTP_PORT=0` and checks Streamable HTTP client behavior over a
+local ephemeral port.
+
+Observed result: initialize, tool listing, resource reading, prompt listing, and
+the `mikuproject_ai_detect_kind` tool call completed successfully over
+Streamable HTTP. The HTTP E2E test also confirmed that an invalid non-local
+`Origin` header is rejected with HTTP 403, oversized request bodies are rejected,
+and request-scoped temporary HTTP workspaces are removed after tool responses.
+
 ## Implementation Order
 
 The Node.js / TypeScript server is the current MCP server implementation.
@@ -108,13 +122,17 @@ The Node.js / TypeScript server is the current MCP server implementation.
 The implementation order is:
 
 1. Build the Node.js / TypeScript local stdio MCP server.
-2. Release and operate the Node version.
-3. Confirm stable local stdio operation with real MCP clients and real project
+2. Add a localhost-oriented stateless Streamable HTTP entrypoint without
+   changing the MCP tool/resource/prompt contract.
+3. Release and operate the Node version.
+4. Confirm stable local stdio and Streamable HTTP operation with real MCP clients and real project
    artifacts.
 
 Stable Node operation means:
 
 - the Node release can be installed and run by MCP clients through local stdio
+- the HTTP entrypoint can be run explicitly for controlled local Streamable HTTP
+  use
 - documented runtime artifacts can be resolved
 - core tools and resources work against real project artifacts
 - diagnostics and generated resource links are understandable
@@ -137,7 +155,7 @@ Inspector and record any client-compatibility notes.
 
 ## Related Documents
 
-- `docs/miku-soft-50-mcp-design-v20260429.md`
+- `docs/miku-soft-50-mcp-design-v20260501.md`
 - `docs/http-transport-decision-v20260427.md`
 - `contract/README.md`
 - `contract/runtime-cli-mapping.md`

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { repositoryRoot } from "../contract/contractPaths.js";
@@ -6,10 +7,16 @@ export type WorkspaceConfig = {
   root: string;
 };
 
+const workspaceRootStorage = new AsyncLocalStorage<string>();
+
 export function resolveWorkspaceConfig(): WorkspaceConfig {
   return {
-    root: resolve(process.env.MIKUPROJECT_MCP_WORKSPACE || resolve(repositoryRoot, "workplace"))
+    root: resolve(workspaceRootStorage.getStore() || process.env.MIKUPROJECT_MCP_WORKSPACE || resolve(repositoryRoot, "workplace"))
   };
+}
+
+export function withWorkspaceRoot<T>(root: string, callback: () => T): T {
+  return workspaceRootStorage.run(resolve(root), callback);
 }
 
 export function ensureWorkspace(config: WorkspaceConfig): void {

@@ -1,12 +1,13 @@
 {
   "name": "@igapyon/mikuproject-mcp-node",
   "version": "0.8.2",
-  "description": "Local stdio MCP server adapter for mikuproject.",
+  "description": "Local stdio and Streamable HTTP MCP server adapter for mikuproject.",
   "private": false,
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "mikuproject-mcp": "dist/index.js"
+    "mikuproject-mcp": "dist/index.js",
+    "mikuproject-mcp-http": "dist/http.js"
   },
   "files": [
     "dist/**/*.js",
@@ -33,7 +34,8 @@
     "build": "tsc -p tsconfig.json",
     "prepack": "npm run build && node scripts/prepare-package-assets.mjs",
     "test": "node --test --test-concurrency=1 dist/test/*.test.js",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "start:http": "node dist/http.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
