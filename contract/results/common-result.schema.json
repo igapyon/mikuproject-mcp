@@ -47,6 +47,15 @@
           },
           "path": {
             "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "base64": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
           }
         }
       }

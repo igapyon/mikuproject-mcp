@@ -4,7 +4,9 @@
   "title": "mikuproject_state_apply_patch input",
   "type": "object",
   "additionalProperties": false,
-  "required": ["statePath", "patchPath"],
+  "required": [
+    "statePath"
+  ],
   "properties": {
     "statePath": {
       "type": "string",
@@ -16,10 +18,62 @@
       "minLength": 1,
       "description": "Path to the mikuproject patch document to apply."
     },
+    "patchContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline mikuproject patch JSON content passed to the upstream CLI on stdin with --in -."
+    },
     "outputPath": {
       "type": "string",
       "minLength": 1,
       "description": "Optional path for the generated next workbook JSON state."
+    },
+    "outputMode": {
+      "type": "string",
+      "enum": [
+        "path",
+        "content"
+      ],
+      "description": "Output mode. Omit or use path to write an artifact path; use content to return the next workbook JSON directly."
     }
-  }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "required": [
+            "patchPath"
+          ],
+          "not": {
+            "required": [
+              "patchContent"
+            ]
+          }
+        },
+        {
+          "required": [
+            "patchContent"
+          ],
+          "not": {
+            "required": [
+              "patchPath"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "not": {
+        "required": [
+          "outputPath",
+          "outputMode"
+        ],
+        "properties": {
+          "outputMode": {
+            "const": "content"
+          }
+        }
+      }
+    }
+  ]
 }

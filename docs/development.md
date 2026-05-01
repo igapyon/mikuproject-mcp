@@ -51,6 +51,66 @@ workplace/upstream/mikuproject/
 workplace/upstream/mikuproject-skills/
 ```
 
+The preferred way to refresh bundled runtime artifacts is to download official
+release assets from each upstream product release page and place those assets
+under `runtime/`. This keeps the MCP repository tied to upstream artifacts that
+were intentionally published and can be traced by release tag, asset name, and
+checksum.
+
+For each runtime refresh, record the upstream release tag, downloaded asset
+names, SHA-256 checksums, CLI `--version` output, and any notable runtime
+surface changes in the release notes or PR description.
+
+Expected placement:
+
+```text
+runtime/mikuproject-node/mikuproject.mjs
+runtime/mikuproject-node/mikuproject-sources.tgz
+runtime/mikuproject-java/mikuproject.jar
+runtime/mikuproject-java/mikuproject-sources.jar
+```
+
+After copying release assets into `runtime/`, verify the bundled artifacts and
+the MCP adapter:
+
+```sh
+shasum -a 256 runtime/mikuproject-node/mikuproject.mjs runtime/mikuproject-node/mikuproject-sources.tgz
+shasum -a 256 runtime/mikuproject-java/mikuproject.jar runtime/mikuproject-java/mikuproject-sources.jar
+node runtime/mikuproject-node/mikuproject.mjs --version
+java -jar runtime/mikuproject-java/mikuproject.jar --version
+npm run build
+npm run test
+```
+
+Local upstream checkouts may be used for development verification or pre-release
+testing, but they are not the preferred source for release-bound bundled
+artifacts. If a local build must be used temporarily, update and rebuild the
+upstream projects, then copy the generated runnable and source traceability
+artifacts into `runtime/`:
+
+```sh
+git -C workplace/upstream/mikuproject fetch
+git -C workplace/upstream/mikuproject merge --ff-only origin/devel
+git -C workplace/upstream/mikuproject-java fetch
+git -C workplace/upstream/mikuproject-java merge --ff-only origin/devel
+
+npm --prefix workplace/upstream/mikuproject run build:cli-bundle
+mvn -f workplace/upstream/mikuproject-java/pom.xml package
+
+cp workplace/upstream/mikuproject/bundle/mikuproject.mjs runtime/mikuproject-node/mikuproject.mjs
+cp workplace/upstream/mikuproject/bundle/mikuproject-sources.tgz runtime/mikuproject-node/mikuproject-sources.tgz
+cp workplace/upstream/mikuproject-java/target/mikuproject.jar runtime/mikuproject-java/mikuproject.jar
+cp workplace/upstream/mikuproject-java/target/mikuproject-sources.jar runtime/mikuproject-java/mikuproject-sources.jar
+```
+
+When using this local-build route, also verify that the copied artifacts match
+the local upstream build outputs:
+
+```sh
+shasum -a 256 runtime/mikuproject-node/mikuproject.mjs workplace/upstream/mikuproject/bundle/mikuproject.mjs
+shasum -a 256 runtime/mikuproject-java/mikuproject.jar workplace/upstream/mikuproject-java/target/mikuproject.jar
+```
+
 ## Package Publishing
 
 The Node package metadata is prepared in `packages/node/package.json` for

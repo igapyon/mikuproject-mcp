@@ -4,12 +4,38 @@
   "title": "mikuproject_ai_detect_kind input",
   "type": "object",
   "additionalProperties": false,
-  "required": ["path"],
   "properties": {
     "path": {
       "type": "string",
       "minLength": 1,
       "description": "Input file path passed to the upstream CLI as --in."
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline input content passed to the upstream CLI on stdin."
     }
-  }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "path"
+      ],
+      "not": {
+        "required": [
+          "content"
+        ]
+      }
+    },
+    {
+      "required": [
+        "content"
+      ],
+      "not": {
+        "required": [
+          "path"
+        ]
+      }
+    }
+  ]
 }

@@ -107,4 +107,113 @@ describe("tool input JSON Schemas", () => {
       assert.equal(validate(input), false, `${toolName} should reject additional properties`);
     }
   });
+
+  it("accepts inline content alternatives and rejects conflicting input modes", () => {
+    const ajv = new Ajv2020({ allErrors: true });
+    const schemas = loadInitialToolInputSchemas();
+
+    const draft = ajv.compile(schemas.mikuproject_state_from_draft);
+    assert.equal(
+      draft({
+        draftContent: "{\"project\":{\"name\":\"inline\"}}",
+        outputMode: "content"
+      }),
+      true,
+      "draft content mode should be valid"
+    );
+    assert.equal(
+      draft({
+        draftPath: "draft.editjson",
+        draftContent: "{\"project\":{\"name\":\"inline\"}}"
+      }),
+      false,
+      "draft path and content should be mutually exclusive"
+    );
+    assert.equal(
+      draft({
+        draftContent: "{\"project\":{\"name\":\"inline\"}}",
+        outputPath: "workbook.json",
+        outputMode: "content"
+      }),
+      false,
+      "content output mode should not accept outputPath"
+    );
+
+    const xlsxImport = ajv.compile(schemas.mikuproject_import_xlsx);
+    assert.equal(
+      xlsxImport({
+        inputBase64: "UEsDBAo=",
+        outputMode: "content"
+      }),
+      true,
+      "XLSX Base64 input mode should be valid"
+    );
+    assert.equal(
+      xlsxImport({
+        inputPath: "project.xlsx",
+        inputBase64: "UEsDBAo="
+      }),
+      false,
+      "XLSX path and Base64 content should be mutually exclusive"
+    );
+
+    const xlsxExport = ajv.compile(schemas.mikuproject_export_xlsx);
+    assert.equal(
+      xlsxExport({
+        workbookContent: "{\"project\":{\"name\":\"inline\"}}",
+        outputMode: "base64"
+      }),
+      true,
+      "binary Base64 output mode should be valid"
+    );
+    assert.equal(
+      xlsxExport({
+        workbookContent: "{\"project\":{\"name\":\"inline\"}}",
+        outputPath: "project.xlsx",
+        outputMode: "base64"
+      }),
+      false,
+      "Base64 output mode should not accept outputPath"
+    );
+
+    const validatePatch = ajv.compile(schemas.mikuproject_ai_validate_patch);
+    assert.equal(
+      validatePatch({
+        statePath: "workbook.json",
+        patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}"
+      }),
+      true,
+      "inline patch content should be valid for validation"
+    );
+    assert.equal(
+      validatePatch({
+        statePath: "workbook.json",
+        patchPath: "patch.editjson",
+        patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}"
+      }),
+      false,
+      "patch path and content should be mutually exclusive"
+    );
+
+    const applyPatch = ajv.compile(schemas.mikuproject_state_apply_patch);
+    assert.equal(
+      applyPatch({
+        statePath: "workbook.json",
+        patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}",
+        outputMode: "content"
+      }),
+      true,
+      "inline patch content and content output should be valid for apply"
+    );
+    assert.equal(
+      applyPatch({
+        statePath: "workbook.json",
+        patchContent: "{\"kind\":\"patch_json\",\"operations\":[]}",
+        outputPath: "next-workbook.json",
+        outputMode: "content"
+      }),
+      false,
+      "apply content output mode should not accept outputPath"
+    );
+  });
 });

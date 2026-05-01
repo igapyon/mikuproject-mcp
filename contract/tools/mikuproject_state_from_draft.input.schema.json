@@ -4,17 +4,68 @@
   "title": "mikuproject_state_from_draft input",
   "type": "object",
   "additionalProperties": false,
-  "required": ["draftPath"],
   "properties": {
     "draftPath": {
       "type": "string",
       "minLength": 1,
       "description": "Path to a mikuproject draft document."
     },
+    "draftContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline mikuproject draft document content passed on stdin."
+    },
     "outputPath": {
       "type": "string",
       "minLength": 1,
       "description": "Optional path for the generated workbook JSON state."
+    },
+    "outputMode": {
+      "type": "string",
+      "enum": [
+        "path",
+        "content"
+      ],
+      "description": "Output mode. Omit or use path to write an artifact path; use content to return text content directly."
     }
-  }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "required": [
+            "draftPath"
+          ],
+          "not": {
+            "required": [
+              "draftContent"
+            ]
+          }
+        },
+        {
+          "required": [
+            "draftContent"
+          ],
+          "not": {
+            "required": [
+              "draftPath"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "not": {
+        "required": [
+          "outputPath",
+          "outputMode"
+        ],
+        "properties": {
+          "outputMode": {
+            "const": "content"
+          }
+        }
+      }
+    }
+  ]
 }

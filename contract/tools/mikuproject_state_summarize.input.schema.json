@@ -4,12 +4,42 @@
   "title": "mikuproject_state_summarize input",
   "type": "object",
   "additionalProperties": false,
-  "required": ["workbookPath"],
   "properties": {
     "workbookPath": {
       "type": "string",
       "minLength": 1,
       "description": "Path to the mikuproject workbook JSON state passed to the upstream CLI as --in."
+    },
+    "workbookContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline mikuproject workbook JSON content passed on stdin."
     }
-  }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "required": [
+            "workbookPath"
+          ],
+          "not": {
+            "required": [
+              "workbookContent"
+            ]
+          }
+        },
+        {
+          "required": [
+            "workbookContent"
+          ],
+          "not": {
+            "required": [
+              "workbookPath"
+            ]
+          }
+        }
+      ]
+    }
+  ]
 }

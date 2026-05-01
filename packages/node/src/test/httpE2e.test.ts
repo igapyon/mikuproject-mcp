@@ -121,6 +121,93 @@ describe("Streamable HTTP MCP server E2E", () => {
     }
   });
 
+  it("handles content-mode tool calls without request-scoped workspace artifacts", async () => {
+    const currentDir = dirname(fileURLToPath(import.meta.url));
+    const repositoryRoot = resolve(currentDir, "../../../..");
+    const serverEntryPoint = resolve(currentDir, "../http.js");
+    const tempRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-content-e2e-"));
+    const runtimePath = join(tempRoot, "fake-mikuproject.mjs");
+    const statePath = join(tempRoot, "workbook.json");
+    const workspacePath = join(tempRoot, "workspace");
+
+    writeFileSync(
+      runtimePath,
+      [
+        "import { readFileSync } from 'node:fs';",
+        "let stdin = '';",
+        "process.stdin.setEncoding('utf8');",
+        "for await (const chunk of process.stdin) stdin += chunk;",
+        "const args = process.argv.slice(2);",
+        "if (args.join(' ') !== 'state apply-patch --state ' + args[3] + ' --in - --out -') {",
+        "  console.error('unexpected args: ' + args.join(' '));",
+        "  process.exit(2);",
+        "}",
+        "const state = JSON.parse(readFileSync(args[3], 'utf8'));",
+        "const patch = JSON.parse(stdin);",
+        "process.stdout.write(JSON.stringify({ kind: 'mikuproject_workbook_json', state, patch }, null, 2));"
+      ].join("\n")
+    );
+    writeFileSync(statePath, JSON.stringify({ kind: "mikuproject_workbook_json", project: { name: "HTTP" } }));
+
+    const child = spawn(process.execPath, [serverEntryPoint], {
+      cwd: repositoryRoot,
+      env: {
+        ...process.env,
+        MIKUPROJECT_MCP_HTTP_HOST: "127.0.0.1",
+        MIKUPROJECT_MCP_HTTP_PORT: "0",
+        MIKUPROJECT_MCP_RUNTIME_NODE: runtimePath,
+        MIKUPROJECT_MCP_WORKSPACE: workspacePath
+      }
+    });
+
+    try {
+      const endpoint = await waitForHttpEndpoint(child);
+      const client = new Client({
+        name: "mikuproject-mcp-http-content-test-client",
+        version: "0.0.0"
+      });
+      const transport = new StreamableHTTPClientTransport(new URL(endpoint));
+
+      try {
+        await client.connect(transport);
+
+        const result = await client.callTool({
+          name: "mikuproject_state_apply_patch",
+          arguments: {
+            statePath,
+            patchContent: JSON.stringify({ kind: "patch_json", operations: [{ op: "test" }] }),
+            outputMode: "content"
+          }
+        });
+        const content = assertTextToolContent(result.content);
+        const parsed = JSON.parse(content[0].text);
+
+        assert.equal(parsed.ok, true);
+        assert.equal(parsed.workspace.root, workspacePath);
+        assert.equal(parsed.artifacts[0].role, "workbook_state");
+        assert.equal(parsed.artifacts[0].mimeType, "application/json");
+        assert.equal("path" in parsed.artifacts[0], false);
+        assert.equal(JSON.parse(parsed.artifacts[0].text).patch.operations.length, 1);
+
+        const summary = parsed.artifacts.find((artifact: { role?: string }) => artifact.role === "operation_summary");
+        const diagnostics = parsed.artifacts.find((artifact: { role?: string }) => artifact.role === "diagnostics_log");
+        assert.equal(typeof summary.text, "string");
+        assert.equal(summary.mimeType, "application/json");
+        assert.equal("path" in summary, false);
+        assert.equal(typeof diagnostics.text, "string");
+        assert.equal(diagnostics.mimeType, "application/json");
+        assert.equal("path" in diagnostics, false);
+        assert.equal(existsSync(join(workspacePath, "mikuproject/state/next-workbook.json")), false);
+        assert.equal(existsSync(join(workspacePath, "mikuproject/summary")), false);
+        assert.equal(existsSync(join(workspacePath, "mikuproject/diagnostics")), false);
+      } finally {
+        await client.close();
+      }
+    } finally {
+      child.kill("SIGTERM");
+    }
+  });
+
   it("rejects invalid Origin headers", async () => {
     const currentDir = dirname(fileURLToPath(import.meta.url));
     const repositoryRoot = resolve(currentDir, "../../../..");

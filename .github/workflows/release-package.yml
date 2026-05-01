@@ -45,8 +45,8 @@ jobs:
 
       - name: Pack Node package
         run: |
-          mkdir -p release-assets
-          npm --workspace packages/node pack --pack-destination release-assets
+          mkdir -p "$GITHUB_WORKSPACE/release-assets"
+          npm --workspace packages/node pack --pack-destination "$GITHUB_WORKSPACE/release-assets"
 
       - name: Verify packed MCP surface
         run: node packages/node/scripts/verify-package-surface.mjs release-assets/*.tgz

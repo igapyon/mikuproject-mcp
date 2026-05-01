@@ -3,6 +3,7 @@ node_modules/
 dist/
 coverage/
 *.log
+release-assets/
 
 workplace/*
 !workplace/.gitkeep
@@ -20,7 +21,11 @@ runtime/mikuproject-java/*
 !runtime/mikuproject-java/.gitkeep
 !runtime/mikuproject-java/mikuproject.jar
 !runtime/mikuproject-java/mikuproject-sources.jar
+!runtime/mikuproject-java/mikuproject-*.jar
+!runtime/mikuproject-java/mikuproject-sources-*.jar
 runtime/mikuproject-node/*
 !runtime/mikuproject-node/.gitkeep
 !runtime/mikuproject-node/mikuproject.mjs
 !runtime/mikuproject-node/mikuproject-sources.tgz
+!runtime/mikuproject-node/mikuproject-*.mjs
+!runtime/mikuproject-node/mikuproject-sources-*.tgz

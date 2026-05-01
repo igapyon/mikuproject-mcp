@@ -4,7 +4,6 @@
   "title": "mikuproject_ai_export_bundle input",
   "type": "object",
   "additionalProperties": false,
-  "required": ["workbookPath"],
   "properties": {
     "workbookPath": {
       "type": "string",
@@ -15,6 +14,58 @@
       "type": "string",
       "minLength": 1,
       "description": "Optional path for the generated AI-facing bundle projection."
+    },
+    "workbookContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline mikuproject workbook JSON content passed on stdin."
+    },
+    "outputMode": {
+      "type": "string",
+      "enum": [
+        "path",
+        "content"
+      ],
+      "description": "Output mode. Omit or use path to write an artifact path; use content to return text content directly."
     }
-  }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "required": [
+            "workbookPath"
+          ],
+          "not": {
+            "required": [
+              "workbookContent"
+            ]
+          }
+        },
+        {
+          "required": [
+            "workbookContent"
+          ],
+          "not": {
+            "required": [
+              "workbookPath"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "not": {
+        "required": [
+          "outputPath",
+          "outputMode"
+        ],
+        "properties": {
+          "outputMode": {
+            "const": "content"
+          }
+        }
+      }
+    }
+  ]
 }

@@ -1,11 +1,9 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { spawn } from "node:child_process";
 import { errorCategories } from "../results/errorCategories.js";
 import { resolveRuntimeConfig } from "./runtimeConfig.js";
 
-const execFileAsync = promisify(execFile);
-
 export type RuntimeKind = "java" | "node";
+export type RuntimeOutputMode = "path" | "content" | "base64";
 
 const javaNetworkArgs = ["-Djava.net.preferIPv4Stack=true", "-Djava.net.preferIPv6Addresses=false"];
 
@@ -18,48 +16,62 @@ export type RuntimeOperation =
     }
   | {
       name: "ai_detect_kind";
-      inputPath: string;
+      inputPath?: string;
+      inputContent?: string;
     }
   | {
       name: "state_from_draft";
-      draftPath: string;
-      outputPath: string;
+      draftPath?: string;
+      draftContent?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "ai_export_project_overview";
-      workbookPath: string;
-      outputPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "ai_export_bundle";
-      workbookPath: string;
-      outputPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "ai_export_task_edit";
-      workbookPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
       taskUid: string;
-      outputPath: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "ai_export_phase_detail";
-      workbookPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
       phaseUid: string;
       mode?: "scoped" | "full";
       rootTaskUid?: string;
       maxDepth?: number;
-      outputPath: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "ai_validate_patch";
       statePath: string;
-      patchPath: string;
+      patchPath?: string;
+      patchContent?: string;
     }
   | {
       name: "state_apply_patch";
       statePath: string;
-      patchPath: string;
-      outputPath: string;
+      patchPath?: string;
+      patchContent?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "state_diff";
@@ -68,22 +80,29 @@ export type RuntimeOperation =
     }
   | {
       name: "state_summarize";
-      workbookPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
     }
   | {
       name: "export_workbook_json";
-      workbookPath: string;
-      outputPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "export_xml" | "export_xlsx";
-      workbookPath: string;
-      outputPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name: "import_xlsx";
-      inputPath: string;
-      outputPath: string;
+      inputPath?: string;
+      inputBase64?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     }
   | {
       name:
@@ -94,14 +113,17 @@ export type RuntimeOperation =
         | "report_all"
         | "report_wbs_markdown"
         | "report_mermaid";
-      workbookPath: string;
-      outputPath: string;
+      workbookPath?: string;
+      workbookContent?: string;
+      outputPath?: string;
+      outputMode?: RuntimeOutputMode;
     };
 
 export type RuntimeCommand = {
   kind: RuntimeKind;
   command: string;
   args: string[];
+  stdin?: string;
 };
 
 export type RuntimeExecutionResult = {
@@ -120,33 +142,84 @@ export type RuntimeExecutionResult = {
 };
 
 export function buildRuntimeArgs(operation: RuntimeOperation): string[] {
+  return buildRuntimeInvocation(operation).args;
+}
+
+type RuntimeInvocation = {
+  args: string[];
+  stdin?: string;
+};
+
+export function buildRuntimeInvocation(operation: RuntimeOperation): RuntimeInvocation {
   switch (operation.name) {
     case "version":
-      return ["--version"];
+      return { args: ["--version"] };
     case "ai_spec":
-      return ["ai", "spec"];
+      return { args: ["ai", "spec"] };
     case "ai_detect_kind":
-      return ["ai", "detect-kind", "--in", operation.inputPath];
+      return {
+        args: ["ai", "detect-kind", "--in", textInputPath(operation.inputPath, operation.inputContent, "inputPath", "inputContent")],
+        stdin: operation.inputContent
+      };
     case "state_from_draft":
-      return ["state", "from-draft", "--in", operation.draftPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "state",
+          "from-draft",
+          "--in",
+          textInputPath(operation.draftPath, operation.draftContent, "draftPath", "draftContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.draftContent
+      };
     case "ai_export_project_overview":
-      return ["ai", "export", "project-overview", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "ai",
+          "export",
+          "project-overview",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "ai_export_bundle":
-      return ["ai", "export", "bundle", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "ai",
+          "export",
+          "bundle",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "ai_export_task_edit":
-      return [
+      return {
+        args: [
+          "ai",
+          "export",
+          "task-edit",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          "--task-uid",
+          operation.taskUid,
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
+    case "ai_export_phase_detail": {
+      const args = [
         "ai",
         "export",
-        "task-edit",
+        "phase-detail",
         "--in",
-        operation.workbookPath,
-        "--task-uid",
-        operation.taskUid,
-        "--out",
-        operation.outputPath
+        textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+        "--phase-uid",
+        operation.phaseUid
       ];
-    case "ai_export_phase_detail": {
-      const args = ["ai", "export", "phase-detail", "--in", operation.workbookPath, "--phase-uid", operation.phaseUid];
       if (operation.mode) {
         args.push("--mode", operation.mode);
       }
@@ -156,51 +229,188 @@ export function buildRuntimeArgs(operation: RuntimeOperation): string[] {
       if (typeof operation.maxDepth === "number") {
         args.push("--max-depth", String(operation.maxDepth));
       }
-      args.push("--out", operation.outputPath);
-      return args;
+      args.push(...textOutputArgs(operation.outputPath, operation.outputMode));
+      return { args, stdin: operation.workbookContent };
     }
     case "ai_validate_patch":
-      return ["ai", "validate-patch", "--state", operation.statePath, "--in", operation.patchPath];
+      return {
+        args: [
+          "ai",
+          "validate-patch",
+          "--state",
+          operation.statePath,
+          "--in",
+          textInputPath(operation.patchPath, operation.patchContent, "patchPath", "patchContent")
+        ],
+        stdin: operation.patchContent
+      };
     case "state_apply_patch":
-      return ["state", "apply-patch", "--state", operation.statePath, "--in", operation.patchPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "state",
+          "apply-patch",
+          "--state",
+          operation.statePath,
+          "--in",
+          textInputPath(operation.patchPath, operation.patchContent, "patchPath", "patchContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.patchContent
+      };
     case "state_diff":
-      return ["state", "diff", "--before", operation.beforePath, "--after", operation.afterPath];
+      return { args: ["state", "diff", "--before", operation.beforePath, "--after", operation.afterPath] };
     case "state_summarize":
-      return ["state", "summarize", "--in", operation.workbookPath];
+      return {
+        args: ["state", "summarize", "--in", textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent")],
+        stdin: operation.workbookContent
+      };
     case "export_workbook_json":
-      return ["export", "workbook-json", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "export",
+          "workbook-json",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "export_xml":
-      return ["export", "xml", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "export",
+          "xml",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "export_xlsx":
-      return ["export", "xlsx", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "export",
+          "xlsx",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...binaryOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "import_xlsx":
-      return ["import", "xlsx", "--in", operation.inputPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "import",
+          "xlsx",
+          ...binaryInputArgs(operation.inputPath, operation.inputBase64),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.inputBase64
+      };
     case "report_wbs_xlsx":
-      return ["report", "wbs-xlsx", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "report",
+          "wbs-xlsx",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...binaryOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "report_daily_svg":
-      return ["report", "daily-svg", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "report",
+          "daily-svg",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "report_weekly_svg":
-      return ["report", "weekly-svg", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "report",
+          "weekly-svg",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "report_monthly_calendar_svg":
-      return ["report", "monthly-calendar-svg", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "report",
+          "monthly-calendar-svg",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...binaryOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "report_all":
-      return ["report", "all", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "report",
+          "all",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...binaryOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "report_wbs_markdown":
-      return ["report", "wbs-markdown", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "report",
+          "wbs-markdown",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
     case "report_mermaid":
-      return ["report", "mermaid", "--in", operation.workbookPath, "--out", operation.outputPath];
+      return {
+        args: [
+          "report",
+          "mermaid",
+          "--in",
+          textInputPath(operation.workbookPath, operation.workbookContent, "workbookPath", "workbookContent"),
+          ...textOutputArgs(operation.outputPath, operation.outputMode)
+        ],
+        stdin: operation.workbookContent
+      };
   }
 }
 
 export function selectRuntimeCommand(operation: RuntimeOperation, cwd = process.cwd()): RuntimeCommand | undefined {
   const config = resolveRuntimeConfig(cwd);
-  const runtimeArgs = buildRuntimeArgs(operation);
+  const invocation = buildRuntimeInvocation(operation);
+  const contentMode = usesContentIo(operation);
+
+  if (contentMode && config.nodeCliPath) {
+    return {
+      kind: "node",
+      command: "node",
+      args: [config.nodeCliPath, ...invocation.args],
+      stdin: invocation.stdin
+    };
+  }
+
+  if (contentMode) {
+    return undefined;
+  }
 
   if (config.javaJarPath) {
     return {
       kind: "java",
       command: "java",
-      args: [...javaNetworkArgs, "-jar", config.javaJarPath, ...runtimeArgs]
+      args: [...javaNetworkArgs, "-jar", config.javaJarPath, ...invocation.args],
+      stdin: invocation.stdin
     };
   }
 
@@ -208,7 +418,8 @@ export function selectRuntimeCommand(operation: RuntimeOperation, cwd = process.
     return {
       kind: "node",
       command: "node",
-      args: [config.nodeCliPath, ...runtimeArgs]
+      args: [config.nodeCliPath, ...invocation.args],
+      stdin: invocation.stdin
     };
   }
 
@@ -223,6 +434,7 @@ export async function runRuntimeOperation(
   const selected = selectRuntimeCommand(operation, cwd);
 
   if (!selected) {
+    const contentMode = usesContentIo(operation);
     return {
       ok: false,
       stdout: "",
@@ -232,16 +444,17 @@ export async function runRuntimeOperation(
         {
           level: "error",
           code: errorCategories.upstreamRuntimeFailure,
-          message: "No configured or bundled mikuproject runtime artifact is available."
+          message: contentMode
+            ? "The requested content-mode operation requires a Node.js mikuproject runtime with stdin/stdout support."
+            : "No configured or bundled mikuproject runtime artifact is available."
         }
       ]
     };
   }
 
   try {
-    const result = await execFileAsync(selected.command, selected.args, {
+    const result = await runCommand(selected.command, selected.args, selected.stdin, {
       cwd,
-      encoding: "utf8",
       maxBuffer: 10 * 1024 * 1024
     });
 
@@ -288,6 +501,135 @@ export async function runRuntimeOperation(
       ]
     };
   }
+}
+
+function textInputPath(
+  path: string | undefined,
+  content: string | undefined,
+  pathFieldName: string,
+  contentFieldName: string
+): string {
+  if (path && content !== undefined) {
+    throw new Error(`${pathFieldName} and ${contentFieldName} are mutually exclusive.`);
+  }
+  if (content !== undefined) {
+    return "-";
+  }
+  return requiredPath(path, pathFieldName);
+}
+
+function binaryInputArgs(inputPath: string | undefined, inputBase64: string | undefined): string[] {
+  if (inputPath && inputBase64 !== undefined) {
+    throw new Error("inputPath and inputBase64 are mutually exclusive.");
+  }
+  if (inputBase64 !== undefined) {
+    return ["--in-base64", "-"];
+  }
+  return ["--in", requiredPath(inputPath, "inputPath")];
+}
+
+function requiredPath(path: string | undefined, fieldName: string): string {
+  if (!path) {
+    throw new Error(`${fieldName} is required for path-mode runtime execution.`);
+  }
+  return path;
+}
+
+function textOutputArgs(path: string | undefined, outputMode: RuntimeOutputMode | undefined): string[] {
+  if (outputMode === "content") {
+    if (path) {
+      throw new Error("outputPath cannot be used with content output mode.");
+    }
+    return ["--out", "-"];
+  }
+  return ["--out", requiredPath(path, "outputPath")];
+}
+
+function binaryOutputArgs(path: string | undefined, outputMode: RuntimeOutputMode | undefined): string[] {
+  if (outputMode === "base64") {
+    if (path) {
+      throw new Error("outputPath cannot be used with base64 output mode.");
+    }
+    return ["--out-base64", "-"];
+  }
+  return ["--out", requiredPath(path, "outputPath")];
+}
+
+function usesContentIo(operation: RuntimeOperation): boolean {
+  if ("outputMode" in operation && (operation.outputMode === "content" || operation.outputMode === "base64")) {
+    return true;
+  }
+  return (
+    ("inputContent" in operation && operation.inputContent !== undefined) ||
+    ("draftContent" in operation && operation.draftContent !== undefined) ||
+    ("workbookContent" in operation && operation.workbookContent !== undefined) ||
+    ("patchContent" in operation && operation.patchContent !== undefined) ||
+    ("inputBase64" in operation && operation.inputBase64 !== undefined)
+  );
+}
+
+function runCommand(
+  command: string,
+  args: string[],
+  stdin: string | undefined,
+  options: { cwd: string; maxBuffer: number }
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd,
+      stdio: ["pipe", "pipe", "pipe"]
+    });
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
+    let stdoutBytes = 0;
+    let stderrBytes = 0;
+
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdoutBytes += chunk.byteLength;
+      if (stdoutBytes + stderrBytes > options.maxBuffer) {
+        child.kill();
+        reject(new Error("Runtime output exceeded maxBuffer."));
+        return;
+      }
+      stdoutChunks.push(chunk);
+    });
+
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderrBytes += chunk.byteLength;
+      if (stdoutBytes + stderrBytes > options.maxBuffer) {
+        child.kill();
+        reject(new Error("Runtime output exceeded maxBuffer."));
+        return;
+      }
+      stderrChunks.push(chunk);
+    });
+
+    child.on("error", reject);
+    child.on("close", (code) => {
+      const stdout = Buffer.concat(stdoutChunks).toString("utf8");
+      const stderr = Buffer.concat(stderrChunks).toString("utf8");
+      if (code === 0) {
+        resolve({ stdout, stderr });
+        return;
+      }
+
+      const error = new Error(`Command failed: ${command} ${args.join(" ")}`) as Error & {
+        code?: number | null;
+        stdout?: string;
+        stderr?: string;
+      };
+      error.code = code;
+      error.stdout = stdout;
+      error.stderr = stderr;
+      reject(error);
+    });
+
+    if (stdin !== undefined) {
+      child.stdin.end(stdin);
+    } else {
+      child.stdin.end();
+    }
+  });
 }
 
 function classifyRuntimeFailure(output: string) {

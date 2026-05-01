@@ -43,10 +43,25 @@ if (extractResult.status !== 0) {
 }
 
 const serverEntryPoint = join(extractRoot, "package/dist/index.js");
+const packageRoot = join(extractRoot, "package");
+const runtimeConfigModule = await import(`file://${join(packageRoot, "dist/runtime/runtimeConfig.js")}`);
+const runtimeConfig = runtimeConfigModule.resolveRuntimeConfig(packageRoot);
+
+assert.match(
+  runtimeConfig.javaJarPath || "",
+  /runtime\/mikuproject-java\/mikuproject-\d+(?:\.\d+)*\.jar$/,
+  "Expected package runtime discovery to select a versioned Java runtime artifact."
+);
+assert.match(
+  runtimeConfig.nodeCliPath || "",
+  /runtime\/mikuproject-node\/mikuproject-\d+(?:\.\d+)*\.mjs$/,
+  "Expected package runtime discovery to select a versioned Node.js runtime artifact."
+);
+
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: [serverEntryPoint],
-  cwd: join(extractRoot, "package"),
+  cwd: packageRoot,
   env: {
     ...getDefaultEnvironment(),
     MIKUPROJECT_MCP_WORKSPACE: workspacePath

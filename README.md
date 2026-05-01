@@ -51,9 +51,7 @@ The package name prepared for the Node release is:
 ## Version Policy
 
 The MCP package version should generally match the bundled Node.js
-`mikuproject` CLI runtime version. For the `0.8.2` MCP release, the bundled
-Node.js CLI still reports `mikuproject 0.8.0`; this MCP patch release updates
-the adapter contract for MCP client tool-name compatibility.
+`mikuproject` CLI runtime version.
 
 If the bundled Java runtime has a different patch version, treat that as runtime
 traceability information. Do not use the Java runtime patch version as the MCP
@@ -96,7 +94,7 @@ You can configure the listener with environment variables:
 MIKUPROJECT_MCP_HTTP_HOST=127.0.0.1
 MIKUPROJECT_MCP_HTTP_PORT=3000
 MIKUPROJECT_MCP_HTTP_ENDPOINT=/mcp
-MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES=10485760
+MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES=52428800
 MIKUPROJECT_MCP_HTTP_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
@@ -104,12 +102,16 @@ The current HTTP transport is stateless. It does not issue `Mcp-Session-Id`,
 does not keep durable project state, and creates a fresh MCP server instance for
 each HTTP request. When a tool needs a default output location, the HTTP
 entrypoint uses a request-scoped temporary workspace and removes it after the
-response completes. Client-owned project files remain the source of truth.
+response completes. Content-mode tool calls that do not need default output
+files skip that request-scoped temporary workspace and return operation summary
+and diagnostics as inline result artifacts. Client-owned project files remain
+the source of truth.
 
 Because the HTTP temporary workspace is removed after each response, do not rely
-on returned server-local artifact paths as durable storage. Hosted or remote
-profiles that need downloadable artifacts should add an explicit upload,
-download, or content-return policy.
+on returned server-local artifact paths as durable storage. Prefer content-mode
+outputs for stateless HTTP workflows that can carry the response body directly.
+Hosted or remote profiles that need downloadable artifacts should add an
+explicit upload, download, or content-return policy.
 
 The HTTP server rejects non-local `Origin` headers unless they are listed in
 `MIKUPROJECT_MCP_HTTP_ALLOWED_ORIGINS`. Do not bind it to a public interface
@@ -121,13 +123,13 @@ cleanup, audit, and runtime isolation design.
 GitHub Releases may provide an npm package tarball asset named like:
 
 ```text
-igapyon-mikuproject-mcp-node-0.8.2.tgz
+igapyon-mikuproject-mcp-node-0.8.3.tgz
 ```
 
 After downloading the tarball, install it globally:
 
 ```sh
-npm install -g ./igapyon-mikuproject-mcp-node-0.8.2.tgz
+npm install -g ./igapyon-mikuproject-mcp-node-0.8.3.tgz
 ```
 
 Then configure your MCP client to run the installed command:
@@ -146,7 +148,7 @@ You can also run the release tarball directly with `npm exec` without a global
 install. Replace the version and URL with the release asset you want to use:
 
 ```sh
-npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.2/igapyon-mikuproject-mcp-node-0.8.2.tgz -- mikuproject-mcp
+npm exec --yes --package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.3/igapyon-mikuproject-mcp-node-0.8.3.tgz -- mikuproject-mcp
 ```
 
 Example MCP client configuration:
@@ -159,7 +161,7 @@ Example MCP client configuration:
       "args": [
         "exec",
         "--yes",
-        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.2/igapyon-mikuproject-mcp-node-0.8.2.tgz",
+        "--package=https://github.com/igapyon/mikuproject-mcp/releases/download/v0.8.3/igapyon-mikuproject-mcp-node-0.8.3.tgz",
         "--",
         "mikuproject-mcp"
       ]
@@ -182,6 +184,32 @@ MIKUPROJECT_MCP_WORKSPACE=/path/to/workspace
 `MIKUPROJECT_MCP_WORKSPACE` controls where generated state, projections,
 exports, reports, summaries, and diagnostics are written. If it is not set, the
 server uses `workplace/` under this repository.
+
+Bundled runtime discovery accepts versioned artifact names such as
+`runtime/mikuproject-node/mikuproject-0.8.3.3.mjs` and
+`runtime/mikuproject-java/mikuproject-0.8.3.3.jar`. When multiple versioned
+artifacts are present, the newest numeric version is selected. Legacy names
+(`mikuproject.mjs` and `mikuproject.jar`) remain supported as fallback names.
+
+## Path and Content I/O
+
+Path mode remains the default. Tools accept existing `*Path` fields and write
+default outputs under `MIKUPROJECT_MCP_WORKSPACE` when `outputPath` is omitted.
+
+The bundled Node.js `mikuproject 0.8.3.3` runtime also supports content mode for
+operations whose schemas expose inline fields. Text inputs can use
+`draftContent`, `workbookContent`, `patchContent`, or `content`; XLSX imports
+can use `inputBase64`. Patch content mode keeps `statePath` path-based because
+the runtime accepts only one stdin input per command. Text outputs can set
+`outputMode` to `content`; binary outputs can set `outputMode` to `base64`. In
+those modes, the generated artifact is returned in the tool result as `text` or
+`base64` with a `mimeType`, and no default output file is created for that
+artifact.
+
+Java runtime execution remains path-mode only until equivalent stdin/stdout and
+Base64 behavior is verified. When content mode is requested, the adapter selects
+the Node.js runtime and reports a runtime diagnostic if no compatible Node.js
+runtime is available.
 
 ## Tools
 
@@ -238,7 +266,8 @@ Common resource URIs include:
 - `mikuproject://diagnostics/{operationId}`
 
 Tool results include generated artifact paths and, where applicable,
-product-specific resource URIs.
+product-specific resource URIs. Content-mode results can instead include
+result-only artifact fields such as `text`, `base64`, and `mimeType`.
 
 ## Prompts
 
