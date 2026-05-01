@@ -11,8 +11,9 @@ server does not call external AI services and does not replace the upstream
 ## Status
 
 This repository is currently a Node.js / TypeScript MCP server implementation.
-The Node package metadata is prepared for a future public package release, but
-the current validation path is still to build and run it from a local checkout.
+The Node package metadata is prepared for future npm registry publication, but
+the current validation path is still to build and run it from a local checkout
+or use a GitHub Release tarball when one is available.
 
 ## Requirements
 
