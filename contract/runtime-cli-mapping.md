@@ -61,14 +61,50 @@ the corresponding CLI commands. The bundled Java and Node runtime artifacts were
 checked with `--help` on 2026-04-29 and both list `report wbs-xlsx`, `report
 daily-svg`, `report weekly-svg`, `report monthly-calendar-svg`, and `report all`.
 
+## Content-Mode I/O
+
+Path mode remains the shared Java and Node contract. The MCP adapter keeps
+existing `*Path` and `outputPath` fields for local stdio clients and workspace
+artifact workflows.
+
+Bundled Node.js `mikuproject 0.8.3.3` also supports stdin/stdout content mode:
+
+- text input: `--in -`
+- text output: `--out -`
+- binary XLSX input: `--in-base64 -`
+- binary output: `--out-base64 -`
+
+The MCP schemas expose this as inline text fields such as `draftContent`,
+`workbookContent`, `patchContent`, and `content`, plus `inputBase64` for XLSX
+imports. Patch content mode keeps `statePath` path-based and sends only the
+patch document on stdin with `--in -`, because the runtime accepts only one
+stdin input per command. Text outputs use `outputMode: "content"` and binary
+outputs use `outputMode: "base64"`. Path and inline input fields are mutually
+exclusive. Content/base64 output mode does not accept `outputPath`; the adapter
+returns a result-only artifact with `text` or `base64` and `mimeType` instead.
+
+When a content-mode call is requested, the adapter prefers the Node.js runtime
+even if Java is configured. Java content-mode support is intentionally not
+claimed here until equivalent Java stdin/stdout and Base64 behavior is verified.
+
 ## Runtime Artifacts
 
 The MCP server resolves runtime artifacts in this order:
 
 1. `MIKUPROJECT_MCP_RUNTIME_JAVA`
 2. `MIKUPROJECT_MCP_RUNTIME_NODE`
-3. `runtime/mikuproject-java/mikuproject.jar`
-4. `runtime/mikuproject-node/mikuproject.mjs`
+3. newest versioned bundled Java artifact:
+   `runtime/mikuproject-java/mikuproject-*.jar`
+4. newest versioned bundled Node.js artifact:
+   `runtime/mikuproject-node/mikuproject-*.mjs`
+5. legacy bundled Java artifact:
+   `runtime/mikuproject-java/mikuproject.jar`
+6. legacy bundled Node.js artifact:
+   `runtime/mikuproject-node/mikuproject.mjs`
+
+Versioned bundled artifacts are compared as numeric dot-separated versions, so
+`0.8.3.10` is newer than `0.8.3.3`. Legacy unversioned names are kept only as a
+fallback for older checkouts and packages.
 
 Java is preferred when both runtimes are available. Node.js is the fallback for
 core tools.

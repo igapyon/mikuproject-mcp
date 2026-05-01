@@ -8,6 +8,7 @@ export type WorkspaceConfig = {
 };
 
 const workspaceRootStorage = new AsyncLocalStorage<string>();
+const inlineOperationArtifactsStorage = new AsyncLocalStorage<boolean>();
 
 export function resolveWorkspaceConfig(): WorkspaceConfig {
   return {
@@ -17,6 +18,14 @@ export function resolveWorkspaceConfig(): WorkspaceConfig {
 
 export function withWorkspaceRoot<T>(root: string, callback: () => T): T {
   return workspaceRootStorage.run(resolve(root), callback);
+}
+
+export function withInlineOperationArtifacts<T>(callback: () => T): T {
+  return inlineOperationArtifactsStorage.run(true, callback);
+}
+
+export function shouldInlineOperationArtifacts(): boolean {
+  return inlineOperationArtifactsStorage.getStore() === true;
 }
 
 export function ensureWorkspace(config: WorkspaceConfig): void {

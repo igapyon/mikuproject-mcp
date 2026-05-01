@@ -6,12 +6,12 @@ import { join } from "node:path";
 
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMikuprojectServer } from "./server/createServer.js";
-import { withWorkspaceRoot } from "./workspace/workspace.js";
+import { withInlineOperationArtifacts, withWorkspaceRoot } from "./workspace/workspace.js";
 
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3000;
 const DEFAULT_ENDPOINT = "/mcp";
-const DEFAULT_MAX_BODY_BYTES = 10 * 1024 * 1024;
+const DEFAULT_MAX_BODY_BYTES = 50 * 1024 * 1024;
 
 const config = {
   host: process.env.MIKUPROJECT_MCP_HTTP_HOST ?? DEFAULT_HOST,
@@ -87,7 +87,8 @@ async function handleHttpRequest(request: IncomingMessage, response: ServerRespo
   }
 
   const parsedBody = await readJsonBody(request, config.maxBodyBytes);
-  const workspaceRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-"));
+  const inlineOnlyRequest = isInlineOnlyToolRequest(parsedBody);
+  const workspaceRoot = inlineOnlyRequest ? undefined : mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-"));
   const mcpServer = createMikuprojectServer();
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined
@@ -100,7 +101,9 @@ async function handleHttpRequest(request: IncomingMessage, response: ServerRespo
     closed = true;
     void transport.close();
     void mcpServer.close();
-    rmSync(workspaceRoot, { recursive: true, force: true });
+    if (workspaceRoot) {
+      rmSync(workspaceRoot, { recursive: true, force: true });
+    }
   };
 
   response.on("finish", closeMcpRequest);
@@ -108,12 +111,61 @@ async function handleHttpRequest(request: IncomingMessage, response: ServerRespo
 
   try {
     await mcpServer.connect(transport);
-    await withWorkspaceRoot(workspaceRoot, () => transport.handleRequest(request, response, parsedBody));
+    if (workspaceRoot) {
+      await withWorkspaceRoot(workspaceRoot, () => transport.handleRequest(request, response, parsedBody));
+    } else {
+      await withInlineOperationArtifacts(() => transport.handleRequest(request, response, parsedBody));
+    }
   } finally {
     if (response.writableEnded) {
       closeMcpRequest();
     }
   }
+}
+
+function isInlineOnlyToolRequest(body: unknown): boolean {
+  if (!isJsonRpcRequestObject(body)) {
+    return false;
+  }
+
+  if (body.method !== "tools/call") {
+    return false;
+  }
+
+  const params = body.params;
+  if (!isRecord(params)) {
+    return false;
+  }
+
+  const args = params.arguments;
+  if (!isRecord(args)) {
+    return false;
+  }
+
+  if (typeof args.outputPath === "string" && args.outputPath.length > 0) {
+    return false;
+  }
+
+  const outputMode = args.outputMode;
+  if (outputMode === "content" || outputMode === "base64") {
+    return true;
+  }
+
+  return (
+    typeof args.content === "string" ||
+    typeof args.patchContent === "string" ||
+    typeof args.draftContent === "string" ||
+    typeof args.workbookContent === "string" ||
+    typeof args.inputBase64 === "string"
+  );
+}
+
+function isJsonRpcRequestObject(value: unknown): value is { method?: unknown; params?: unknown } {
+  return isRecord(value) && typeof value.method === "string";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isAllowedOrigin(request: IncomingMessage): boolean {

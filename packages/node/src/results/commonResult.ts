@@ -10,6 +10,9 @@ export type ArtifactRef = {
   role: string;
   uri?: string;
   path?: string;
+  text?: string;
+  base64?: string;
+  mimeType?: string;
 };
 
 export type CommonResult = {

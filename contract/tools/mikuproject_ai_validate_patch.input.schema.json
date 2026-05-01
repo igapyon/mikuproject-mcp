@@ -4,7 +4,9 @@
   "title": "mikuproject_ai_validate_patch input",
   "type": "object",
   "additionalProperties": false,
-  "required": ["statePath", "patchPath"],
+  "required": [
+    "statePath"
+  ],
   "properties": {
     "statePath": {
       "type": "string",
@@ -15,6 +17,33 @@
       "type": "string",
       "minLength": 1,
       "description": "Path to a mikuproject patch document passed to the upstream CLI as --in."
+    },
+    "patchContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline mikuproject patch JSON content passed to the upstream CLI on stdin with --in -."
     }
-  }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "patchPath"
+      ],
+      "not": {
+        "required": [
+          "patchContent"
+        ]
+      }
+    },
+    {
+      "required": [
+        "patchContent"
+      ],
+      "not": {
+        "required": [
+          "patchPath"
+        ]
+      }
+    }
+  ]
 }

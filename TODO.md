@@ -407,3 +407,71 @@ When this work is resumed:
 - [ ] Create GitHub Release notes for the published version.
 - [ ] Update README or docs if the package should be described as published
       rather than prepared for future release.
+
+## MCP Runtime I/O Without Temporary Files
+
+Context: bundled Node runtime `mikuproject 0.8.3.3` supports stdin/stdout and
+Base64 binary I/O through `--in -`, `--out -`, `--in-base64 -`, and
+`--out-base64 -`. The MCP adapter still exposes path-based tool inputs and writes
+default outputs, operation summaries, and diagnostics under the workspace.
+
+- [x] Decide the public MCP contract shape for content-based I/O.
+      Text inputs should accept inline JSON/text content in addition to existing
+      `*Path` fields.
+- [x] Add binary content contracts.
+      Binary inputs should accept Base64 content in addition to existing
+      `inputPath` fields, and binary outputs should be able to return Base64
+      content directly when `outputPath` is omitted or content mode is requested.
+- [x] Keep path mode compatible.
+      Existing path-based fields should remain supported for local stdio clients
+      and workspace/resource workflows.
+- [x] Update contract schemas under `contract/tools/`.
+      Add content alternatives for workbook JSON, draft JSON, patch JSON, and
+      XLSX inputs. Keep schemas clear enough that callers cannot provide
+      conflicting path and inline content inputs.
+- [x] Update `packages/node/src/runtime/runtimeOperation.ts`.
+      Add runtime command support for stdin payloads. Map Node text content to
+      `--in -` / `--out -`, and Node binary content to `--in-base64 -` /
+      `--out-base64 -`.
+- [x] Preserve Java path-mode behavior.
+      Keep path-based execution for Java runtime until equivalent Java
+      stdin/stdout and Base64 binary behavior is verified.
+- [x] Update runtime selection and capability handling.
+      Prefer Node runtime for content-mode calls when Java cannot support them,
+      and return a clear diagnostic if a requested mode is unsupported.
+- [x] Update `packages/node/src/tools/registerTools.ts`.
+      Accept path or inline content inputs, return inline content artifacts when
+      requested, and avoid creating default output files for content-mode calls.
+- [x] Make summary and diagnostics persistence mode-aware.
+      Content-mode HTTP calls should be able to return operation summary and
+      diagnostics inline instead of always writing workspace files.
+- [x] Update HTTP transport behavior.
+      Avoid creating a request-scoped temporary workspace when a request can be
+      handled entirely with inline content. Keep the temporary workspace fallback
+      for path/resource workflows that still require generated files.
+- [x] Update artifact and resource handling.
+      Keep resource URIs for persisted workspace artifacts, and add result-only
+      artifact handling for inline text and Base64 binary outputs.
+- [ ] Define response-size policy.
+      Ensure large binary results respect `MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES`
+      or a dedicated response-size limit.
+- [x] Add tests for content-mode runtime execution.
+      Cover text stdin/stdout and Base64 XLSX import/export/report flows with
+      the Node runtime.
+- [x] Add MCP smoke and HTTP E2E tests.
+      Prove content-mode tools work without default output files and that HTTP
+      content-mode requests do not leave temporary workspace artifacts.
+- [x] Keep existing path-mode tests passing.
+- [x] Update documentation.
+      Document path mode versus content mode in `README.md`, update
+      `contract/runtime-cli-mapping.md`, and record that Node supports content
+      mode as of `mikuproject 0.8.3.3` while Java support is separate unless
+      verified.
+
+Resume note: draft/workbook/patch text content and XLSX Base64 contracts are
+wired through schemas, tool registration, runtime argument mapping, and
+result-only artifacts. Patch content mode keeps `statePath` path-based because
+the runtime accepts only one stdin input per command. MCP smoke and HTTP E2E
+cover inline patch validation, apply-with-content-output, inline operation
+summary/diagnostics, and avoidance of request-scoped temporary workspace
+artifacts for content-mode HTTP tool calls.
