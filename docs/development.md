@@ -134,6 +134,14 @@ Dry-run the package contents before any publish:
 npm --workspace packages/node pack --dry-run
 ```
 
+GitHub Release tarball distribution is handled by
+`.github/workflows/release-package.yml`. That workflow runs for published
+GitHub Releases whose tag starts with `v`, and can also be started manually with
+`workflow_dispatch` and a `tag_name`. It installs dependencies, builds, tests,
+packs the Node package, verifies the packed MCP surface with
+`packages/node/scripts/verify-package-surface.mjs`, and uploads the generated
+`.tgz` file to the GitHub Release. It does not publish to the npm registry.
+
 Publish is gated on the Node release readiness checklist. When that gate is
 cleared, use an explicit public publish command:
 
@@ -173,7 +181,9 @@ the `mikuproject_ai_detect_kind` tool call completed successfully over
 Streamable HTTP. The HTTP E2E test also confirmed that an invalid non-local
 `Origin` header is rejected with HTTP 403, oversized request and response bodies
 are rejected, host path tool arguments are rejected, and request-scoped
-temporary HTTP workspaces are removed after tool responses.
+temporary HTTP workspaces are removed after tool responses. Invalid session
+verification is not applicable to the current stateless HTTP entrypoint because
+it does not issue `Mcp-Session-Id`.
 
 ## Implementation Order
 

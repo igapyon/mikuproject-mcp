@@ -338,9 +338,21 @@ HTTP deployment boundaries are explicitly designed.
       workspace-relative paths over arbitrary host file paths in HTTP requests.
 - [x] Add an HTTP entrypoint separately from the stdio entrypoint after the
       above boundaries are documented.
-- [ ] Add HTTP verification for initialize, tools/list, tools/call,
-      resources/list, resources/read, prompts/list, prompts/get, invalid
-      session, invalid origin, oversized body, and workspace escape attempts.
+- [x] Add HTTP verification for current stateless HTTP behavior:
+  - [x] initialize
+  - [x] tools/list
+  - [x] tools/call
+  - [x] resources/list
+  - [x] resources/read
+  - [x] prompts/list
+  - [x] prompts/get
+  - [x] invalid origin
+  - [x] oversized request body
+  - [x] oversized response body
+  - [x] host path / workspace escape attempts
+  - [x] request-scoped temporary workspace cleanup
+  - [x] invalid session is not applicable while `Mcp-Session-Id` is not issued
+        by the stateless HTTP entrypoint.
 - [x] After implementing and verifying HTTP support in `mikuproject-mcp`, update
       `docs/miku-soft-50-mcp-design-v20260501.md` with the concrete lessons
       learned so future miku MCP servers can follow tested guidance.
@@ -366,6 +378,23 @@ Before treating the Node.js MCP server as a releasable package:
 - [x] Verify the server with MCP Inspector after build and record the result,
       including any client-compatibility notes.
 
+## GitHub Release Tarball Distribution
+
+GitHub Release tarball distribution is separate from npm publication. It builds
+and attaches a package tarball to a GitHub Release, but it does not publish the
+package to the npm registry.
+
+- [x] Add `.github/workflows/release-package.yml`.
+- [x] Run the workflow on published GitHub Releases whose tag starts with `v`.
+- [x] Allow manual `workflow_dispatch` with a `tag_name`.
+- [x] Install dependencies, build, and test before packing.
+- [x] Pack the Node package with:
+      `npm --workspace packages/node pack`.
+- [x] Verify the packed MCP surface with:
+      `node packages/node/scripts/verify-package-surface.mjs`.
+- [x] Upload `release-assets/*.tgz` to the GitHub Release.
+- [x] Keep npm registry publication out of this workflow.
+
 ## Later: npm Publication
 
 npm publication is desirable for public distribution, but it is intentionally
@@ -380,7 +409,10 @@ When this work is resumed:
       publishing.
 - [ ] Decide whether the first npm release should be manual or CI-based.
 - [ ] Confirm the npm account can publish under the `@igapyon` scope.
-- [ ] Confirm the public package name:
+- [x] Confirm the intended public package name in repository metadata:
+      `@igapyon/mikuproject-mcp-node`.
+      This is confirmed in `packages/node/package.json` and `README.md`.
+- [ ] Confirm npm registry availability and scoped publish permission for:
       `@igapyon/mikuproject-mcp-node`.
 - [x] Confirm the final package version in `packages/node/package.json`.
       Version policy: align the MCP package version with the bundled Node.js

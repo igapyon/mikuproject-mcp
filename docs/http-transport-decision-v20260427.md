@@ -11,6 +11,11 @@ only as adapter-internal runtime inputs when the upstream CLI requires a path.
 It is not a hosted multi-user deployment and does not change the source-of-truth
 policy for project data.
 
+The current stateless entrypoint does not issue `Mcp-Session-Id`, so invalid
+session verification is not part of the current HTTP test surface. If stateful
+HTTP sessions are added later, invalid session behavior must be designed and
+tested with that session model.
+
 Hosted or remotely reachable HTTP transport should be reconsidered only after
 these boundaries are explicitly designed:
 
