@@ -4,14 +4,16 @@
   "title": "mikuproject_state_apply_patch input",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "statePath"
-  ],
   "properties": {
     "statePath": {
       "type": "string",
       "minLength": 1,
       "description": "Path to the source mikuproject workbook JSON state."
+    },
+    "stateContent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Inline source mikuproject workbook JSON state content. The adapter materializes it as a request-local runtime input when the upstream CLI requires --state as a path."
     },
     "patchPath": {
       "type": "string",
@@ -38,6 +40,30 @@
     }
   },
   "allOf": [
+    {
+      "oneOf": [
+        {
+          "required": [
+            "statePath"
+          ],
+          "not": {
+            "required": [
+              "stateContent"
+            ]
+          }
+        },
+        {
+          "required": [
+            "stateContent"
+          ],
+          "not": {
+            "required": [
+              "statePath"
+            ]
+          }
+        }
+      ]
+    },
     {
       "oneOf": [
         {

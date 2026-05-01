@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer, type IncomingMessage, type OutgoingHttpHeader, type OutgoingHttpHeaders, type ServerResponse } from "node:http";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,6 +12,7 @@ const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3000;
 const DEFAULT_ENDPOINT = "/mcp";
 const DEFAULT_MAX_BODY_BYTES = 50 * 1024 * 1024;
+const DEFAULT_MAX_RESPONSE_BYTES = DEFAULT_MAX_BODY_BYTES;
 
 const config = {
   host: process.env.MIKUPROJECT_MCP_HTTP_HOST ?? DEFAULT_HOST,
@@ -20,6 +21,10 @@ const config = {
   maxBodyBytes: parsePositiveInteger(
     process.env.MIKUPROJECT_MCP_HTTP_MAX_BODY_BYTES,
     DEFAULT_MAX_BODY_BYTES
+  ),
+  maxResponseBytes: parsePositiveInteger(
+    process.env.MIKUPROJECT_MCP_HTTP_MAX_RESPONSE_BYTES,
+    DEFAULT_MAX_RESPONSE_BYTES
   ),
   allowedOrigins: parseAllowedOrigins(process.env.MIKUPROJECT_MCP_HTTP_ALLOWED_ORIGINS)
 };
@@ -62,6 +67,8 @@ process.on("SIGTERM", () => {
 });
 
 async function handleHttpRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
+  applyResponseSizeLimit(response, config.maxResponseBytes);
+
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? `${config.host}:${config.port}`}`);
 
   if (url.pathname !== config.endpoint) {
@@ -87,8 +94,9 @@ async function handleHttpRequest(request: IncomingMessage, response: ServerRespo
   }
 
   const parsedBody = await readJsonBody(request, config.maxBodyBytes);
+  validateHttpToolRequest(parsedBody);
   const inlineOnlyRequest = isInlineOnlyToolRequest(parsedBody);
-  const workspaceRoot = inlineOnlyRequest ? undefined : mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-"));
+  const workspaceRoot = mkdtempSync(join(tmpdir(), "mikuproject-mcp-http-"));
   const mcpServer = createMikuprojectServer();
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined
@@ -111,11 +119,11 @@ async function handleHttpRequest(request: IncomingMessage, response: ServerRespo
 
   try {
     await mcpServer.connect(transport);
-    if (workspaceRoot) {
-      await withWorkspaceRoot(workspaceRoot, () => transport.handleRequest(request, response, parsedBody));
-    } else {
-      await withInlineOperationArtifacts(() => transport.handleRequest(request, response, parsedBody));
-    }
+    await withWorkspaceRoot(workspaceRoot, () =>
+      inlineOnlyRequest
+        ? withInlineOperationArtifacts(() => transport.handleRequest(request, response, parsedBody))
+        : transport.handleRequest(request, response, parsedBody)
+    );
   } finally {
     if (response.writableEnded) {
       closeMcpRequest();
@@ -154,10 +162,45 @@ function isInlineOnlyToolRequest(body: unknown): boolean {
   return (
     typeof args.content === "string" ||
     typeof args.patchContent === "string" ||
+    typeof args.stateContent === "string" ||
     typeof args.draftContent === "string" ||
     typeof args.workbookContent === "string" ||
     typeof args.inputBase64 === "string"
   );
+}
+
+const HTTP_FORBIDDEN_PATH_ARGUMENTS = new Set([
+  "path",
+  "draftPath",
+  "workbookPath",
+  "statePath",
+  "patchPath",
+  "beforePath",
+  "afterPath",
+  "inputPath",
+  "outputPath"
+]);
+
+function validateHttpToolRequest(body: unknown): void {
+  if (!isJsonRpcRequestObject(body) || body.method !== "tools/call") {
+    return;
+  }
+
+  const params = body.params;
+  if (!isRecord(params)) {
+    return;
+  }
+
+  const args = params.arguments;
+  if (!isRecord(args)) {
+    return;
+  }
+
+  for (const key of Object.keys(args)) {
+    if (HTTP_FORBIDDEN_PATH_ARGUMENTS.has(key)) {
+      throw new HttpRequestError(400, `HTTP tools/call does not accept host path argument: ${key}`);
+    }
+  }
 }
 
 function isJsonRpcRequestObject(value: unknown): value is { method?: unknown; params?: unknown } {
@@ -273,6 +316,141 @@ function writeJson(response: ServerResponse, statusCode: number, body: unknown):
     "content-type": "application/json; charset=utf-8"
   });
   response.end(JSON.stringify(body));
+}
+
+function applyResponseSizeLimit(response: ServerResponse, maxResponseBytes: number): void {
+  const originalEnd = response.end.bind(response);
+  const originalWriteHead = response.writeHead.bind(response);
+  const chunks: Buffer[] = [];
+  let bufferedBytes = 0;
+  type WriteHeadHeaders = OutgoingHttpHeaders | OutgoingHttpHeader[];
+  let pendingStatusCode: number | undefined;
+  let exceededLimit = false;
+  let ended = false;
+
+  response.writeHead = ((statusCode: number, statusMessageOrHeaders?: string | WriteHeadHeaders, headers?: WriteHeadHeaders) => {
+    pendingStatusCode = statusCode;
+    if (typeof statusMessageOrHeaders === "string") {
+      response.statusMessage = statusMessageOrHeaders;
+      applyWriteHeadHeaders(response, headers);
+    } else {
+      applyWriteHeadHeaders(response, statusMessageOrHeaders);
+    }
+    response.statusCode = statusCode;
+    return response;
+  }) as ServerResponse["writeHead"];
+
+  response.write = ((chunk: unknown, encodingOrCallback?: BufferEncoding | ((error?: Error | null) => void), callback?: (error?: Error | null) => void) => {
+    if (ended) {
+      return false;
+    }
+
+    const buffer = toResponseBuffer(chunk, typeof encodingOrCallback === "string" ? encodingOrCallback : undefined);
+    bufferedBytes += buffer.byteLength;
+    if (bufferedBytes > maxResponseBytes) {
+      exceededLimit = true;
+      ended = true;
+      sendResponseLimitError(response, originalWriteHead, originalEnd);
+    } else {
+      chunks.push(buffer);
+    }
+
+    const done = typeof encodingOrCallback === "function" ? encodingOrCallback : callback;
+    if (done) {
+      process.nextTick(done);
+    }
+    return !exceededLimit;
+  }) as ServerResponse["write"];
+
+  response.end = ((chunk?: unknown, encodingOrCallback?: BufferEncoding | (() => void), callback?: () => void) => {
+    if (ended) {
+      return response;
+    }
+    ended = true;
+
+    if (chunk !== undefined && chunk !== null) {
+      const buffer = toResponseBuffer(chunk, typeof encodingOrCallback === "string" ? encodingOrCallback : undefined);
+      bufferedBytes += buffer.byteLength;
+      if (bufferedBytes > maxResponseBytes) {
+        exceededLimit = true;
+      } else {
+        chunks.push(buffer);
+      }
+    }
+
+    const done = typeof encodingOrCallback === "function" ? encodingOrCallback : callback;
+    if (exceededLimit) {
+      sendResponseLimitError(response, originalWriteHead, originalEnd, done);
+      return response;
+    }
+
+    if (pendingStatusCode !== undefined) {
+      originalWriteHead(pendingStatusCode);
+    }
+    originalEnd(Buffer.concat(chunks), done);
+    return response;
+  }) as ServerResponse["end"];
+}
+
+function sendResponseLimitError(
+  response: ServerResponse,
+  writeHead: ServerResponse["writeHead"],
+  end: ServerResponse["end"],
+  callback?: () => void
+): void {
+  if (response.headersSent) {
+    end(callback);
+    return;
+  }
+
+  response.statusCode = 413;
+  response.removeHeader("content-length");
+  response.setHeader("content-type", "application/json; charset=utf-8");
+  writeHead(413);
+  end(JSON.stringify({
+    jsonrpc: "2.0",
+    error: {
+      code: -32000,
+      message: "Response body exceeds configured limit"
+    },
+    id: null
+  }), callback);
+}
+
+function applyWriteHeadHeaders(response: ServerResponse, headers: OutgoingHttpHeaders | OutgoingHttpHeader[] | undefined): void {
+  if (!headers) {
+    return;
+  }
+
+  if (Array.isArray(headers)) {
+    for (let index = 0; index < headers.length; index += 2) {
+      const name = headers[index];
+      const value = headers[index + 1];
+      if (typeof name === "string" && value !== undefined) {
+        response.setHeader(name, value);
+      }
+    }
+    return;
+  }
+
+  for (const [name, value] of Object.entries(headers)) {
+    if (value !== undefined) {
+      response.setHeader(name, value);
+    }
+  }
+}
+
+function toResponseBuffer(chunk: unknown, encoding: BufferEncoding | undefined): Buffer {
+  if (Buffer.isBuffer(chunk)) {
+    return chunk;
+  }
+  if (typeof chunk === "string") {
+    return Buffer.from(chunk, encoding);
+  }
+  if (chunk instanceof Uint8Array) {
+    return Buffer.from(chunk);
+  }
+  return Buffer.from(String(chunk), encoding);
 }
 
 function parsePort(value: string | undefined): number {
